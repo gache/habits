@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #f5f0e8;
+  font-family: 'Nunito', system-ui, sans-serif;
+  color: #3d3020;
+}
+
+/* DayCell pop animation when marked complete */
+@keyframes day-pop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.35); }
+  70%  { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+
+.day-pop {
+  animation: day-pop 0.25s ease-out;
+}
+
+/* Dark mode body */
+.dark body {
+  background-color: #1e1810;
+  color: #f5f0e8;
+}
