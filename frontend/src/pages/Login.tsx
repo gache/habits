@@ -79,7 +79,7 @@ export default function Login() {
             <h1 className="font-serif font-700 text-xl text-cream-800 dark:text-cream-100">
               Seguimiento de Hábitos
             </h1>
-            <p className="font-handwritten text-cream-400 dark:text-cream-500 text-base mt-1">
+            <p className="font-handwritten text-cream-700 dark:text-cream-400 text-base mt-1">
               Pequeños hábitos, grandes cambios. ♥
             </p>
           </div>
@@ -116,11 +116,11 @@ export default function Login() {
 
           <form onSubmit={handleEmail} className="flex flex-col gap-3">
             <div>
-              <label className="block text-[11px] font-600 uppercase tracking-widest text-cream-400 mb-1.5 font-sans">Correo</label>
+              <label className="block text-xs font-600 uppercase tracking-widest text-cream-700 dark:text-cream-400 mb-1.5 font-sans">Correo</label>
               <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@ejemplo.com" className={inputClass} />
             </div>
             <div>
-              <label className="block text-[11px] font-600 uppercase tracking-widest text-cream-400 mb-1.5 font-sans">Contraseña</label>
+              <label className="block text-xs font-600 uppercase tracking-widest text-cream-700 dark:text-cream-400 mb-1.5 font-sans">Contraseña</label>
               <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className={inputClass} />
             </div>
             {!isSignUp && (
@@ -128,7 +128,7 @@ export default function Login() {
                 type="button"
                 onClick={handleForgotPassword}
                 disabled={loading}
-                className="self-end text-xs text-cream-400 dark:text-cream-500 hover:text-terracotta-600 dark:hover:text-terracotta-400 transition-colors font-sans disabled:opacity-50"
+                className="self-end text-xs text-cream-700 dark:text-cream-400 hover:text-terracotta-600 dark:hover:text-terracotta-400 transition-colors font-sans disabled:opacity-50"
               >
                 ¿Olvidaste tu contraseña?
               </button>

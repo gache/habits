@@ -29,6 +29,31 @@ body {
   }
 }
 
+/* Dense day-grid tables overflow horizontally by design (31 columns need
+   more room than 44px touch targets allow on one row). Force the scrollbar
+   always visible so the cut-off last day reads as "scroll for more", not
+   "missing". */
+.grid-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #bfa882 transparent;
+}
+.grid-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+.grid-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.grid-scroll::-webkit-scrollbar-thumb {
+  background-color: #bfa882;
+  border-radius: 4px;
+}
+.dark .grid-scroll {
+  scrollbar-color: #6b5a45 transparent;
+}
+.dark .grid-scroll::-webkit-scrollbar-thumb {
+  background-color: #6b5a45;
+}
+
 /* Dark mode body */
 .dark body {
   background-color: #1e1810;

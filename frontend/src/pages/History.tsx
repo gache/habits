@@ -77,18 +77,18 @@ function MonthCard({ year, month, habits, isSelected, onClick }: MonthCardProps)
           const hp = daysElapsed > 0 ? Math.round((done / daysElapsed) * 100) : 0
           return (
             <div key={h.id} className="flex items-center gap-1.5">
-              <span className="text-[11px] w-4 text-center">{h.icon}</span>
+              <span className="text-xs w-4 text-center">{h.icon}</span>
               <div className="flex-1 h-1.5 rounded-full bg-cream-200 dark:bg-cream-600 overflow-hidden">
                 <div className="h-full rounded-full" style={{ width: `${hp}%`, backgroundColor: h.color }} />
               </div>
-              <span className="text-[10px] text-cream-500 dark:text-cream-400 w-7 text-right">{hp}%</span>
+              <span className="text-xs text-cream-500 dark:text-cream-400 w-8 text-right">{hp}%</span>
             </div>
           )
         })}
       </div>
 
       {log?.goal && (
-        <p className="mt-2 flex items-center gap-1 text-[11px] text-cream-500 dark:text-cream-400 truncate font-handwritten">
+        <p className="mt-2 flex items-center gap-1 text-xs text-cream-500 dark:text-cream-400 truncate font-handwritten">
           <Target size={12} weight="bold" aria-hidden="true" />
           {log.goal}
         </p>
@@ -116,7 +116,7 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
   const daysElapsed = isCurrentMonth ? new Date().getDate() : daysInMonth
 
   if (isLoading) {
-    return <p className="text-center py-10 text-cream-400 font-handwritten">Cargando...</p>
+    return <p className="text-center py-10 text-cream-700 dark:text-cream-400 font-handwritten">Cargando...</p>
   }
 
   return (
@@ -126,8 +126,9 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
       </h2>
 
       {/* Mini heatmap per habit */}
-      <div className="overflow-x-auto rounded-lg border border-cream-300 dark:border-cream-600 mb-5">
-        <table className="text-[10px] border-collapse w-full">
+      <div className="relative mb-5">
+      <div className="overflow-x-auto grid-scroll rounded-lg border border-cream-300 dark:border-cream-600">
+        <table className="text-xs border-collapse w-full">
           <thead>
             <tr className="bg-cream-100 dark:bg-cream-700 border-b border-cream-300 dark:border-cream-600">
               <th className="py-1.5 px-2 text-left font-bold text-cream-700 dark:text-cream-200 sticky left-0 bg-cream-100 dark:bg-cream-700 z-10 min-w-[210px] max-w-[210px]">HÁBITO</th>
@@ -149,7 +150,7 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
                   <td className="py-1 px-2 sticky left-0 bg-cream-50 dark:bg-cream-800 z-10 min-w-[210px] max-w-[210px]">
                     <span
                       title={habit.name}
-                      className="font-sans font-bold text-[11px] text-cream-800 dark:text-cream-100 leading-tight [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] overflow-hidden"
+                      className="font-sans font-bold text-xs text-cream-800 dark:text-cream-100 leading-tight [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] overflow-hidden"
                     >
                       {habit.icon} {habit.name}
                     </span>
@@ -164,7 +165,7 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
                           className="w-4 h-4 mx-auto rounded-sm border"
                           style={{
                             backgroundColor: completed ? habit.color : 'transparent',
-                            borderColor: isFuture ? 'transparent' : completed ? habit.color : '#d4c4a8',
+                            borderColor: isFuture ? 'transparent' : completed ? habit.color : '#a08860',
                             opacity: isFuture ? 0.2 : 1,
                           }}
                         />
@@ -182,13 +183,18 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
           </tbody>
         </table>
       </div>
+      <div
+        className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-cream-50 dark:from-cream-800 to-transparent rounded-r-lg"
+        aria-hidden="true"
+      />
+      </div>
 
       {/* Monthly reflection */}
       {(log?.goal || log?.reflection_well || log?.reflection_improve || log?.reflection_proud || log?.notes) && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {log.goal && (
             <div className="bg-cream-100 dark:bg-cream-700/50 rounded-lg p-3 border border-cream-200 dark:border-cream-600">
-              <p className="flex items-center gap-1 text-[11px] font-bold text-cream-600 dark:text-cream-300 uppercase tracking-wide mb-1">
+              <p className="flex items-center gap-1 text-xs font-bold text-cream-600 dark:text-cream-300 uppercase tracking-wide mb-1">
                 <Target size={12} weight="bold" aria-hidden="true" /> Meta
               </p>
               <p className="text-sm text-cream-800 dark:text-cream-100 font-handwritten">{log.goal}</p>
@@ -196,7 +202,7 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
           )}
           {log.reflection_well && (
             <div className="bg-cream-100 dark:bg-cream-700/50 rounded-lg p-3 border border-cream-200 dark:border-cream-600">
-              <p className="flex items-center gap-1 text-[11px] font-bold text-cream-600 dark:text-cream-300 uppercase tracking-wide mb-1">
+              <p className="flex items-center gap-1 text-xs font-bold text-cream-600 dark:text-cream-300 uppercase tracking-wide mb-1">
                 <CheckCircle size={12} weight="bold" aria-hidden="true" /> Qué salió bien
               </p>
               <p className="text-sm text-cream-800 dark:text-cream-100 font-handwritten">{log.reflection_well}</p>
@@ -204,7 +210,7 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
           )}
           {log.reflection_improve && (
             <div className="bg-cream-100 dark:bg-cream-700/50 rounded-lg p-3 border border-cream-200 dark:border-cream-600">
-              <p className="flex items-center gap-1 text-[11px] font-bold text-cream-600 dark:text-cream-300 uppercase tracking-wide mb-1">
+              <p className="flex items-center gap-1 text-xs font-bold text-cream-600 dark:text-cream-300 uppercase tracking-wide mb-1">
                 <TrendUp size={12} weight="bold" aria-hidden="true" /> Por mejorar
               </p>
               <p className="text-sm text-cream-800 dark:text-cream-100 font-handwritten">{log.reflection_improve}</p>
@@ -212,7 +218,7 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
           )}
           {log.reflection_proud && (
             <div className="bg-cream-100 dark:bg-cream-700/50 rounded-lg p-3 border border-cream-200 dark:border-cream-600">
-              <p className="flex items-center gap-1 text-[11px] font-bold text-cream-600 dark:text-cream-300 uppercase tracking-wide mb-1">
+              <p className="flex items-center gap-1 text-xs font-bold text-cream-600 dark:text-cream-300 uppercase tracking-wide mb-1">
                 <Star size={12} weight="bold" aria-hidden="true" /> Orgullo de
               </p>
               <p className="text-sm text-cream-800 dark:text-cream-100 font-handwritten">{log.reflection_proud}</p>
@@ -220,7 +226,7 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
           )}
           {log.notes && (
             <div className="sm:col-span-2 bg-cream-100 dark:bg-cream-700/50 rounded-lg p-3 border border-cream-200 dark:border-cream-600">
-              <p className="flex items-center gap-1 text-[11px] font-bold text-cream-600 dark:text-cream-300 uppercase tracking-wide mb-1">
+              <p className="flex items-center gap-1 text-xs font-bold text-cream-600 dark:text-cream-300 uppercase tracking-wide mb-1">
                 <NotePencil size={12} weight="bold" aria-hidden="true" /> Notas
               </p>
               <p className="text-sm text-cream-800 dark:text-cream-100 font-handwritten whitespace-pre-wrap">{log.notes}</p>
@@ -230,7 +236,7 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
       )}
 
       {!log?.goal && !log?.reflection_well && !log?.reflection_improve && !log?.reflection_proud && !log?.notes && (
-        <p className="text-cream-400 dark:text-cream-500 font-handwritten text-sm text-center py-4">
+        <p className="text-cream-700 dark:text-cream-400 font-handwritten text-sm text-center py-4">
           No hay reflexión escrita para este mes.
         </p>
       )}

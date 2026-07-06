@@ -15,7 +15,7 @@ export default function MonthNav({ year, month, onPrev, onNext }: MonthNavProps)
     <div className="flex items-center gap-3">
       <button
         onClick={onPrev}
-        className="w-7 h-7 rounded-full border border-cream-300 dark:border-cream-600 bg-cream-50 dark:bg-cream-800 hover:bg-cream-200 dark:hover:bg-cream-700 text-cream-700 dark:text-cream-200 font-bold text-sm flex items-center justify-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cream-400"
+        className="w-11 h-11 rounded-full border border-cream-300 dark:border-cream-600 bg-cream-50 dark:bg-cream-800 hover:bg-cream-200 dark:hover:bg-cream-700 text-cream-700 dark:text-cream-200 font-bold text-sm flex items-center justify-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cream-400"
         aria-label="Mes anterior"
       >
         ‹
@@ -25,7 +25,7 @@ export default function MonthNav({ year, month, onPrev, onNext }: MonthNavProps)
       </span>
       <button
         onClick={onNext}
-        className="w-7 h-7 rounded-full border border-cream-300 dark:border-cream-600 bg-cream-50 dark:bg-cream-800 hover:bg-cream-200 dark:hover:bg-cream-700 text-cream-700 dark:text-cream-200 font-bold text-sm flex items-center justify-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cream-400"
+        className="w-11 h-11 rounded-full border border-cream-300 dark:border-cream-600 bg-cream-50 dark:bg-cream-800 hover:bg-cream-200 dark:hover:bg-cream-700 text-cream-700 dark:text-cream-200 font-bold text-sm flex items-center justify-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cream-400"
         aria-label="Mes siguiente"
       >
         ›

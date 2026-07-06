@@ -26,6 +26,21 @@ export default function AddHabitModal({ onClose, editing }: AddHabitModalProps) 
   const updateHabit = useUpdateHabit()
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const emojiPickerRef = useRef<HTMLDivElement>(null)
+  const nameInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    nameInputRef.current?.focus()
+  }, [])
+
+  useEffect(() => {
+    // Emoji picker gets first claim on Escape (closes itself via its own
+    // effect below); only close the whole modal when it's not open.
+    const onEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !showEmojiPicker) onClose()
+    }
+    document.addEventListener('keydown', onEscape)
+    return () => document.removeEventListener('keydown', onEscape)
+  }, [onClose, showEmojiPicker])
 
   const [form, setForm] = useState<HabitCreate>({
     name: editing?.name ?? '',
@@ -156,6 +171,7 @@ export default function AddHabitModal({ onClose, editing }: AddHabitModalProps) 
             <div className="flex-1">
               <label className="block text-xs text-cream-600 mb-1">Nombre *</label>
               <input
+                ref={nameInputRef}
                 required
                 value={form.name}
                 onChange={(e) => set('name', e.target.value)}

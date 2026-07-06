@@ -10,15 +10,18 @@ interface DayCellProps {
 export default function DayCell({ completed, color, isToday, disabled, dateLabel, onClick }: DayCellProps) {
   return (
     <td className="p-0 text-center align-middle">
-      {/* Button is a larger tap target (32px, WCAG 2.5.8 AA) than the visual
-          swatch inside it (20px), so the dense month grid stays compact. */}
+      {/* Button is a larger tap target (32px) than the visual swatch inside
+          it (20px), so the dense month grid stays compact. 31 same-row day
+          columns with 1px gaps make a full 44px WCAG 2.5.5 target impossible
+          without collapsing into neighboring cells — 32px is the practical
+          ceiling here; see MonthNav/header controls for full 44px targets. */}
       <button
         onClick={onClick}
         disabled={disabled}
         aria-label={`${dateLabel}, ${completed ? 'completado' : 'no completado'}${disabled ? ', fecha futura' : ''}`}
         title={disabled ? 'No se puede completar una fecha futura' : completed ? 'Marcar como no hecho' : 'Marcar como hecho'}
         className={[
-          'w-7 h-7 mx-auto flex items-center justify-center transition-all',
+          'w-8 h-8 mx-auto flex items-center justify-center transition-all',
           disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer',
           'focus:outline-none focus-visible:ring-2 focus-visible:ring-cream-600 focus-visible:ring-offset-1',
         ].join(' ')}
@@ -33,7 +36,10 @@ export default function DayCell({ completed, color, isToday, disabled, dateLabel
           ].join(' ')}
           style={{
             backgroundColor: completed ? color : 'transparent',
-            borderColor: completed ? color : isToday ? '#a08860' : '#d4c4a8',
+            // #a08860 (cream-500) clears the 3:1 non-text contrast minimum
+            // against both the light and dark card backgrounds; the previous
+            // '#d4c4a8' (cream-300) default sat at ~1.6:1.
+            borderColor: completed ? color : '#a08860',
           }}
         />
       </button>

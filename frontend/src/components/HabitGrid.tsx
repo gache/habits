@@ -31,11 +31,11 @@ export default function HabitGrid({ habits, year, month, completions, isError, o
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-cream-300 dark:border-cream-600">
-      <table className="text-xs w-full" style={{ borderCollapse: 'separate', borderSpacing: '1px 2px' }}>
+    <div className="overflow-x-auto grid-scroll rounded-lg border border-cream-300 dark:border-cream-600">
+      <table className="text-xs w-full" style={{ borderCollapse: 'separate', borderSpacing: '0px 2px' }}>
         <thead>
           <tr className="bg-cream-100 dark:bg-cream-700">
-            <th className="py-2 px-2 text-left font-bold text-cream-700 dark:text-cream-200 sticky left-0 bg-cream-100 dark:bg-cream-700 z-10 min-w-[210px] max-w-[210px] rounded-sm">
+            <th className="py-2 px-2 text-left font-bold text-cream-700 dark:text-cream-200 sticky left-0 bg-cream-100 dark:bg-cream-700 z-10 min-w-[172px] max-w-[172px] rounded-sm">
               HÁBITO
             </th>
             {days.map((d) => {
@@ -45,7 +45,7 @@ export default function HabitGrid({ habits, year, month, completions, isError, o
                 <th
                   key={d}
                   className={[
-                    'text-center font-bold py-2 rounded-sm text-base tabular-nums w-7 min-w-[1.75rem]',
+                    'text-center font-bold py-2 rounded-sm text-base tabular-nums w-8 min-w-[2rem]',
                     isToday ? 'text-cream-800 dark:text-cream-100 underline underline-offset-2' : 'text-cream-600 dark:text-cream-300',
                   ].join(' ')}
                 >
@@ -53,7 +53,7 @@ export default function HabitGrid({ habits, year, month, completions, isError, o
                 </th>
               )
             })}
-            <th className="px-2 text-center font-bold text-cream-700 dark:text-cream-200 w-16 rounded-sm">TOTAL</th>
+            <th className="px-1.5 text-center font-bold text-cream-700 dark:text-cream-200 w-12 rounded-sm">TOTAL</th>
           </tr>
         </thead>
         <tbody>
@@ -72,7 +72,7 @@ export default function HabitGrid({ habits, year, month, completions, isError, o
           ))}
           {habits.length === 0 && (
             <tr>
-              <td colSpan={days.length + 2} className="text-center py-8 text-cream-400 dark:text-cream-500 font-handwritten text-base">
+              <td colSpan={days.length + 2} className="text-center py-8 text-cream-700 dark:text-cream-400 font-handwritten text-base">
                 Aún no hay hábitos — ¡agrega uno con el botón +!
               </td>
             </tr>
