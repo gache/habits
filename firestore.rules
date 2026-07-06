@@ -1,8 +1,55 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /users/{userId}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    function isValidHabit(data) {
+      return data.keys().hasAll(['name', 'frequency', 'active', 'icon', 'color', 'order'])
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 100
+        && data.frequency in ['daily', 'weekly', 'monthly']
+        && data.active is bool
+        && data.icon is string && data.icon.size() <= 8
+        && data.color is string && data.color.matches('^#[0-9a-fA-F]{6}$')
+        && data.order is int
+        && (!('description' in data) || data.description == null || data.description is string);
+    }
+
+    function isValidCompletion(data) {
+      return data.keys().hasAll(['habit_id', 'date'])
+        && data.habit_id is string && data.habit_id.size() > 0
+        && data.date is string && data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+    }
+
+    function isValidMonthlyLog(data) {
+      return data.keys().hasAll(['month'])
+        && data.month is string && data.month.matches('^[0-9]{4}-[0-9]{2}$')
+        && (!('goal' in data) || data.goal is string)
+        && (!('notes' in data) || data.notes is string)
+        && (!('reflection_well' in data) || data.reflection_well is string)
+        && (!('reflection_improve' in data) || data.reflection_improve is string)
+        && (!('reflection_proud' in data) || data.reflection_proud is string);
+    }
+
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+
+      match /habits/{habitId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidHabit(request.resource.data);
+      }
+
+      match /completions/{completionId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidCompletion(request.resource.data);
+      }
+
+      match /monthly_logs/{logId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isOwner(userId) && isValidMonthlyLog(request.resource.data);
+      }
     }
   }
 }

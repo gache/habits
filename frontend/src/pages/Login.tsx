@@ -3,6 +3,7 @@ import { Plant } from '@phosphor-icons/react'
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
   GoogleAuthProvider,
   signInWithPopup,
 } from 'firebase/auth'
@@ -13,7 +14,26 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [isSignUp, setIsSignUp] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [info, setInfo] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+
+  const handleForgotPassword = async () => {
+    setError(null)
+    setInfo(null)
+    if (!email) {
+      setError('Ingresa tu correo arriba y volvé a intentar.')
+      return
+    }
+    setLoading(true)
+    try {
+      await sendPasswordResetEmail(auth, email)
+      setInfo('Te enviamos un correo para restablecer tu contraseña.')
+    } catch (err: any) {
+      setError(err?.message ?? 'Error al enviar el correo de recuperación')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleEmail = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -88,6 +108,12 @@ export default function Login() {
             </div>
           )}
 
+          {info && (
+            <div className="text-sage-700 dark:text-sage-400 text-xs mb-4 bg-sage-50 dark:bg-sage-900/30 border border-sage-200 dark:border-sage-800 rounded-lg px-3 py-2.5 leading-relaxed">
+              {info}
+            </div>
+          )}
+
           <form onSubmit={handleEmail} className="flex flex-col gap-3">
             <div>
               <label className="block text-[11px] font-600 uppercase tracking-widest text-cream-400 mb-1.5 font-sans">Correo</label>
@@ -97,6 +123,16 @@ export default function Login() {
               <label className="block text-[11px] font-600 uppercase tracking-widest text-cream-400 mb-1.5 font-sans">Contraseña</label>
               <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className={inputClass} />
             </div>
+            {!isSignUp && (
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                disabled={loading}
+                className="self-end text-xs text-cream-400 dark:text-cream-500 hover:text-terracotta-600 dark:hover:text-terracotta-400 transition-colors font-sans disabled:opacity-50"
+              >
+                ¿Olvidaste tu contraseña?
+              </button>
+            )}
             <button
               type="submit"
               disabled={loading}

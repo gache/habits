@@ -130,7 +130,7 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
         <table className="text-[10px] border-collapse w-full">
           <thead>
             <tr className="bg-cream-100 dark:bg-cream-700 border-b border-cream-300 dark:border-cream-600">
-              <th className="py-1.5 px-2 text-left font-bold text-cream-700 dark:text-cream-200 sticky left-0 bg-cream-100 dark:bg-cream-700 z-10 min-w-[120px]">HÁBITO</th>
+              <th className="py-1.5 px-2 text-left font-bold text-cream-700 dark:text-cream-200 sticky left-0 bg-cream-100 dark:bg-cream-700 z-10 min-w-[210px] max-w-[210px]">HÁBITO</th>
               {days.map((d) => (
                 <th key={d} className="w-5 text-center font-bold text-cream-500 dark:text-cream-400 py-1.5">{d}</th>
               ))}
@@ -146,8 +146,11 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
               const pct = effectiveDays > 0 ? Math.min(100, Math.round((completedUpToToday / effectiveDays) * 100)) : 0
               return (
                 <tr key={habit.id} className="border-b border-cream-200 dark:border-cream-600">
-                  <td className="py-1 px-2 sticky left-0 bg-cream-50 dark:bg-cream-800 z-10">
-                    <span className="font-sans font-bold text-[11px] text-cream-800 dark:text-cream-100">
+                  <td className="py-1 px-2 sticky left-0 bg-cream-50 dark:bg-cream-800 z-10 min-w-[210px] max-w-[210px]">
+                    <span
+                      title={habit.name}
+                      className="font-sans font-bold text-[11px] text-cream-800 dark:text-cream-100 leading-tight [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] overflow-hidden"
+                    >
                       {habit.icon} {habit.name}
                     </span>
                   </td>
