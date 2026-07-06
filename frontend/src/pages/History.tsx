@@ -10,8 +10,8 @@ import BestStreaks from '@/components/BestStreaks'
 // ─── helpers ────────────────────────────────────────────────────────────────
 
 const MONTH_NAMES = [
-  'January','February','March','April','May','June',
-  'July','August','September','October','November','December',
+  'Enero','Febrero','Marzo','Abril','Mayo','Junio',
+  'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre',
 ]
 
 function getLast12Months(): { year: number; month: number; label: string }[] {
@@ -49,8 +49,8 @@ function MonthCard({ year, month, habits, isSelected, onClick }: MonthCardProps)
   const totalCompleted = completions.filter((c) => c.date <= today).length
   const pct = totalPossible > 0 ? Math.round((totalCompleted / totalPossible) * 100) : 0
 
-  const color = pct >= 80 ? '#16a34a' : pct >= 50 ? '#d97706' : '#ef4444'
-  const bgColor = pct >= 80 ? 'bg-green-50 dark:bg-green-950/30' : pct >= 50 ? 'bg-amber-50 dark:bg-amber-950/30' : 'bg-red-50 dark:bg-red-950/20'
+  const color = pct >= 80 ? '#457040' : pct >= 50 ? '#c2603a' : '#ef4444'
+  const bgColor = pct >= 80 ? 'bg-sage-50 dark:bg-sage-900/30' : pct >= 50 ? 'bg-terracotta-50 dark:bg-terracotta-900/30' : 'bg-red-50 dark:bg-red-950/20'
 
   return (
     <button
@@ -116,7 +116,7 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
   const daysElapsed = isCurrentMonth ? new Date().getDate() : daysInMonth
 
   if (isLoading) {
-    return <p className="text-center py-10 text-cream-400 font-handwritten">Loading...</p>
+    return <p className="text-center py-10 text-cream-400 font-handwritten">Cargando...</p>
   }
 
   return (
@@ -130,7 +130,7 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
         <table className="text-[10px] border-collapse w-full">
           <thead>
             <tr className="bg-cream-100 dark:bg-cream-700 border-b border-cream-300 dark:border-cream-600">
-              <th className="py-1.5 px-2 text-left font-bold text-cream-700 dark:text-cream-200 sticky left-0 bg-cream-100 dark:bg-cream-700 z-10 min-w-[120px]">HABIT</th>
+              <th className="py-1.5 px-2 text-left font-bold text-cream-700 dark:text-cream-200 sticky left-0 bg-cream-100 dark:bg-cream-700 z-10 min-w-[120px]">HÁBITO</th>
               {days.map((d) => (
                 <th key={d} className="w-5 text-center font-bold text-cream-500 dark:text-cream-400 py-1.5">{d}</th>
               ))}
@@ -169,7 +169,7 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
                     )
                   })}
                   <td className="px-2 text-center">
-                    <span className="font-sans font-bold" style={{ color: pct >= 80 ? '#16a34a' : pct >= 50 ? '#d97706' : '#ef4444' }}>
+                    <span className="font-sans font-bold" style={{ color: pct >= 80 ? '#457040' : pct >= 50 ? '#c2603a' : '#ef4444' }}>
                       {pct}%
                     </span>
                   </td>
@@ -186,7 +186,7 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
           {log.goal && (
             <div className="bg-cream-100 dark:bg-cream-700/50 rounded-lg p-3 border border-cream-200 dark:border-cream-600">
               <p className="flex items-center gap-1 text-[11px] font-bold text-cream-600 dark:text-cream-300 uppercase tracking-wide mb-1">
-                <Target size={12} weight="bold" aria-hidden="true" /> Goal
+                <Target size={12} weight="bold" aria-hidden="true" /> Meta
               </p>
               <p className="text-sm text-cream-800 dark:text-cream-100 font-handwritten">{log.goal}</p>
             </div>
@@ -194,7 +194,7 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
           {log.reflection_well && (
             <div className="bg-cream-100 dark:bg-cream-700/50 rounded-lg p-3 border border-cream-200 dark:border-cream-600">
               <p className="flex items-center gap-1 text-[11px] font-bold text-cream-600 dark:text-cream-300 uppercase tracking-wide mb-1">
-                <CheckCircle size={12} weight="bold" aria-hidden="true" /> What went well
+                <CheckCircle size={12} weight="bold" aria-hidden="true" /> Qué salió bien
               </p>
               <p className="text-sm text-cream-800 dark:text-cream-100 font-handwritten">{log.reflection_well}</p>
             </div>
@@ -202,7 +202,7 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
           {log.reflection_improve && (
             <div className="bg-cream-100 dark:bg-cream-700/50 rounded-lg p-3 border border-cream-200 dark:border-cream-600">
               <p className="flex items-center gap-1 text-[11px] font-bold text-cream-600 dark:text-cream-300 uppercase tracking-wide mb-1">
-                <TrendUp size={12} weight="bold" aria-hidden="true" /> To improve
+                <TrendUp size={12} weight="bold" aria-hidden="true" /> Por mejorar
               </p>
               <p className="text-sm text-cream-800 dark:text-cream-100 font-handwritten">{log.reflection_improve}</p>
             </div>
@@ -210,7 +210,7 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
           {log.reflection_proud && (
             <div className="bg-cream-100 dark:bg-cream-700/50 rounded-lg p-3 border border-cream-200 dark:border-cream-600">
               <p className="flex items-center gap-1 text-[11px] font-bold text-cream-600 dark:text-cream-300 uppercase tracking-wide mb-1">
-                <Star size={12} weight="bold" aria-hidden="true" /> Proud of
+                <Star size={12} weight="bold" aria-hidden="true" /> Orgullo de
               </p>
               <p className="text-sm text-cream-800 dark:text-cream-100 font-handwritten">{log.reflection_proud}</p>
             </div>
@@ -218,7 +218,7 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
           {log.notes && (
             <div className="sm:col-span-2 bg-cream-100 dark:bg-cream-700/50 rounded-lg p-3 border border-cream-200 dark:border-cream-600">
               <p className="flex items-center gap-1 text-[11px] font-bold text-cream-600 dark:text-cream-300 uppercase tracking-wide mb-1">
-                <NotePencil size={12} weight="bold" aria-hidden="true" /> Notes
+                <NotePencil size={12} weight="bold" aria-hidden="true" /> Notas
               </p>
               <p className="text-sm text-cream-800 dark:text-cream-100 font-handwritten whitespace-pre-wrap">{log.notes}</p>
             </div>
@@ -228,7 +228,7 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
 
       {!log?.goal && !log?.reflection_well && !log?.reflection_improve && !log?.reflection_proud && !log?.notes && (
         <p className="text-cream-400 dark:text-cream-500 font-handwritten text-sm text-center py-4">
-          No reflection written for this month.
+          No hay reflexión escrita para este mes.
         </p>
       )}
     </div>
@@ -254,17 +254,17 @@ export default function History() {
           <button
             onClick={() => navigate('/')}
             className="w-8 h-8 rounded-full border border-cream-300 dark:border-cream-600 bg-cream-50 dark:bg-cream-800 hover:bg-cream-200 dark:hover:bg-cream-700 text-cream-700 dark:text-cream-200 flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1"
-            title="Back to Tracker"
-            aria-label="Back to Tracker"
+            title="Volver al Tracker"
+            aria-label="Volver al Tracker"
           >
             <CaretLeft size={16} weight="bold" />
           </button>
           <div>
             <h1 className="font-sans font-extrabold text-2xl tracking-widest text-cream-800 dark:text-cream-100 flex items-center gap-2">
               <CalendarBlank size={22} weight="fill" aria-hidden="true" />
-              HISTORY
+              HISTORIAL
             </h1>
-            <p className="font-handwritten text-cream-500 text-base">Your last 12 months at a glance.</p>
+            <p className="font-handwritten text-cream-500 text-base">Tus últimos 12 meses de un vistazo.</p>
           </div>
         </div>
 

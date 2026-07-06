@@ -6,8 +6,8 @@ interface MonthNavProps {
 }
 
 const MONTHS = [
-  'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
-  'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER',
+  'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
+  'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE',
 ]
 
 export default function MonthNav({ year, month, onPrev, onNext }: MonthNavProps) {
@@ -16,7 +16,7 @@ export default function MonthNav({ year, month, onPrev, onNext }: MonthNavProps)
       <button
         onClick={onPrev}
         className="w-7 h-7 rounded-full border border-cream-300 dark:border-cream-600 bg-cream-50 dark:bg-cream-800 hover:bg-cream-200 dark:hover:bg-cream-700 text-cream-700 dark:text-cream-200 font-bold text-sm flex items-center justify-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cream-400"
-        aria-label="Previous month"
+        aria-label="Mes anterior"
       >
         ‹
       </button>
@@ -26,7 +26,7 @@ export default function MonthNav({ year, month, onPrev, onNext }: MonthNavProps)
       <button
         onClick={onNext}
         className="w-7 h-7 rounded-full border border-cream-300 dark:border-cream-600 bg-cream-50 dark:bg-cream-800 hover:bg-cream-200 dark:hover:bg-cream-700 text-cream-700 dark:text-cream-200 font-bold text-sm flex items-center justify-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cream-400"
-        aria-label="Next month"
+        aria-label="Mes siguiente"
       >
         ›
       </button>

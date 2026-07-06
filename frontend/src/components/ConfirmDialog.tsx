@@ -14,8 +14,8 @@ interface ConfirmDialogProps {
 export default function ConfirmDialog({
   title,
   message,
-  confirmLabel = 'Confirm',
-  cancelLabel = 'Cancel',
+  confirmLabel = 'Confirmar',
+  cancelLabel = 'Cancelar',
   danger,
   onConfirm,
   onCancel,
@@ -60,7 +60,7 @@ export default function ConfirmDialog({
             onClick={onConfirm}
             className={[
               'px-3 py-1.5 rounded text-sm font-bold text-cream-50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1',
-              danger ? 'bg-red-600 hover:bg-red-700 focus:ring-red-400' : 'bg-cream-800 hover:bg-cream-700 focus:ring-cream-400',
+              danger ? 'bg-red-600 hover:bg-red-700 focus:ring-red-400' : 'bg-terracotta-600 hover:bg-terracotta-700 focus:ring-terracotta-400',
             ].join(' ')}
           >
             {confirmLabel}

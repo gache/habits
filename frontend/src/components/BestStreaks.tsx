@@ -10,7 +10,7 @@ interface BestStreaksProps {
   title?: string
 }
 
-export default function BestStreaks({ habits, completions, title = 'BEST STREAKS (LAST 12 MONTHS)' }: BestStreaksProps) {
+export default function BestStreaks({ habits, completions, title = 'MEJORES RACHAS (ÚLTIMOS 12 MESES)' }: BestStreaksProps) {
   const records = habits
     .map((habit) => {
       const dates = new Set(completions.filter((c) => c.habit_id === habit.id).map((c) => c.date))
@@ -41,7 +41,7 @@ export default function BestStreaks({ habits, completions, title = 'BEST STREAKS
                 {habit.icon} {habit.name}
               </span>
               <span className="font-sans text-xs text-cream-500 dark:text-cream-300">
-                {best} days
+                {best} días
               </span>
             </div>
           )

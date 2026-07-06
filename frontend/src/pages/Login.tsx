@@ -26,7 +26,7 @@ export default function Login() {
         await signInWithEmailAndPassword(auth, email, password)
       }
     } catch (err: any) {
-      setError(err?.message ?? 'Authentication failed')
+      setError(err?.message ?? 'Error de autenticación')
     } finally {
       setLoading(false)
     }
@@ -38,7 +38,7 @@ export default function Login() {
     try {
       await signInWithPopup(auth, new GoogleAuthProvider())
     } catch (err: any) {
-      setError(err?.message ?? 'Google sign-in failed')
+      setError(err?.message ?? 'Error al iniciar sesión con Google')
     } finally {
       setLoading(false)
     }
@@ -57,16 +57,16 @@ export default function Login() {
               <Plant size={28} weight="fill" className="text-sage-600" aria-hidden="true" />
             </div>
             <h1 className="font-serif font-700 text-xl text-cream-800 dark:text-cream-100">
-              Habit Tracker
+              Seguimiento de Hábitos
             </h1>
             <p className="font-handwritten text-cream-400 dark:text-cream-500 text-base mt-1">
-              Small habits, big changes. ♥
+              Pequeños hábitos, grandes cambios. ♥
             </p>
           </div>
 
           {/* Tab toggle */}
           <div className="flex rounded-lg overflow-hidden border border-cream-200 dark:border-cream-700 mb-5 p-0.5 bg-cream-100 dark:bg-cream-700 gap-0.5">
-            {(['Sign In', 'Sign Up'] as const).map((label, idx) => (
+            {(['Iniciar Sesión', 'Registrarse'] as const).map((label, idx) => (
               <button
                 key={label}
                 onClick={() => setIsSignUp(idx === 1)}
@@ -90,25 +90,25 @@ export default function Login() {
 
           <form onSubmit={handleEmail} className="flex flex-col gap-3">
             <div>
-              <label className="block text-[11px] font-600 uppercase tracking-widest text-cream-400 mb-1.5 font-sans">Email</label>
-              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className={inputClass} />
+              <label className="block text-[11px] font-600 uppercase tracking-widest text-cream-400 mb-1.5 font-sans">Correo</label>
+              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@ejemplo.com" className={inputClass} />
             </div>
             <div>
-              <label className="block text-[11px] font-600 uppercase tracking-widest text-cream-400 mb-1.5 font-sans">Password</label>
+              <label className="block text-[11px] font-600 uppercase tracking-widest text-cream-400 mb-1.5 font-sans">Contraseña</label>
               <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className={inputClass} />
             </div>
             <button
               type="submit"
               disabled={loading}
-              className="mt-1 w-full bg-cream-800 dark:bg-cream-100 text-cream-50 dark:text-cream-900 rounded-lg py-2.5 text-sm font-700 hover:bg-cream-700 dark:hover:bg-cream-200 disabled:opacity-50 transition-colors shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+              className="mt-1 w-full bg-terracotta-600 text-cream-50 rounded-lg py-2.5 text-sm font-700 hover:bg-terracotta-700 disabled:opacity-50 transition-colors shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
             >
-              {loading ? '…' : isSignUp ? 'Create Account' : 'Sign In'}
+              {loading ? '…' : isSignUp ? 'Crear Cuenta' : 'Iniciar Sesión'}
             </button>
           </form>
 
           <div className="flex items-center gap-3 my-5">
             <div className="flex-1 h-px bg-cream-200 dark:bg-cream-700" />
-            <span className="text-xs text-cream-300 dark:text-cream-600 font-sans">or</span>
+            <span className="text-xs text-cream-300 dark:text-cream-600 font-sans">o</span>
             <div className="flex-1 h-px bg-cream-200 dark:bg-cream-700" />
           </div>
 
@@ -123,7 +123,7 @@ export default function Login() {
               <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
               <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
             </svg>
-            Continue with Google
+            Continuar con Google
           </button>
         </div>
       </div>

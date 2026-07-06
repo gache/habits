@@ -5,12 +5,13 @@ import { type StreakLevel } from '@/lib/streak-levels'
 interface StreakCelebrationProps {
   habitName: string
   level: StreakLevel
+  streak: number
   onDismiss: () => void
 }
 
 const AUTO_DISMISS_MS = 3500
 
-export default function StreakCelebration({ habitName, level, onDismiss }: StreakCelebrationProps) {
+export default function StreakCelebration({ habitName, level, streak, onDismiss }: StreakCelebrationProps) {
   const [entered, setEntered] = useState(false)
   const Icon = level.icon
 
@@ -50,16 +51,16 @@ export default function StreakCelebration({ habitName, level, onDismiss }: Strea
           <Icon size={36} weight="fill" color={level.color} aria-hidden="true" />
         </div>
         <p className="font-sans font-extrabold text-lg text-cream-800 dark:text-cream-100">
-          {level.days} days in a row!
+          ¡{streak} días seguidos!
         </p>
         <p className="font-handwritten text-cream-600 dark:text-cream-300 text-base mt-1">
           {level.label} — {habitName}
         </p>
         <button
           onClick={onDismiss}
-          className="mt-4 px-4 py-1.5 rounded-full bg-cream-800 dark:bg-cream-200 dark:text-cream-800 text-cream-50 text-sm font-bold hover:bg-cream-700 transition-colors focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1"
+          className="mt-4 px-4 py-1.5 rounded-full bg-terracotta-600 text-cream-50 text-sm font-bold hover:bg-terracotta-700 transition-colors focus:outline-none focus:ring-2 focus:ring-terracotta-400 focus:ring-offset-1"
         >
-          Nice!
+          ¡Genial!
         </button>
       </div>
     </div>,

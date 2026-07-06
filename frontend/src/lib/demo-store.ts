@@ -10,10 +10,10 @@ import type { MonthlyLog } from '@/hooks/useMonthlyLog'
 // ─── seed data ───────────────────────────────────────────────────────────────
 
 const SEED_HABITS: Habit[] = [
-  { id: 'h1', name: 'DRINK WATER', description: '8 glasses', frequency: 'daily', active: true, icon: '💧', color: '#a8d8ea', order: 0, created_at: null, updated_at: null },
-  { id: 'h2', name: 'EXERCISE',    description: '30 min',    frequency: 'daily', active: true, icon: '🏃', color: '#b8e0b8', order: 1, created_at: null, updated_at: null },
-  { id: 'h3', name: 'READ',        description: '20 pages',  frequency: 'daily', active: true, icon: '📚', color: '#d4a8d4', order: 2, created_at: null, updated_at: null },
-  { id: 'h4', name: 'MEDITATE',    description: '10 min',    frequency: 'daily', active: true, icon: '🧘', color: '#f0e0a0', order: 3, created_at: null, updated_at: null },
+  { id: 'h1', name: 'TOMAR AGUA', description: '8 vasos',    frequency: 'daily', active: true, icon: '💧', color: '#a8d8ea', order: 0, created_at: null, updated_at: null },
+  { id: 'h2', name: 'EJERCICIO',  description: '30 min',     frequency: 'daily', active: true, icon: '🏃', color: '#b8e0b8', order: 1, created_at: null, updated_at: null },
+  { id: 'h3', name: 'LEER',       description: '20 páginas', frequency: 'daily', active: true, icon: '📚', color: '#d4a8d4', order: 2, created_at: null, updated_at: null },
+  { id: 'h4', name: 'MEDITAR',    description: '10 min',     frequency: 'daily', active: true, icon: '🧘', color: '#f0e0a0', order: 3, created_at: null, updated_at: null },
 ]
 
 /** Generate seed completions for the last N months so history page has data */

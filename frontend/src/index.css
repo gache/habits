@@ -4,6 +4,9 @@
 
 body {
   background-color: #f5f0e8;
+  background-image: radial-gradient(circle at 15% 0%, rgba(196, 154, 108, 0.10), transparent 55%),
+                     radial-gradient(circle at 100% 30%, rgba(69, 112, 64, 0.06), transparent 45%);
+  background-attachment: fixed;
   font-family: 'Nunito', system-ui, sans-serif;
   color: #3d3020;
 }
@@ -20,8 +23,16 @@ body {
   animation: day-pop 0.25s ease-out;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .day-pop {
+    animation: none;
+  }
+}
+
 /* Dark mode body */
 .dark body {
   background-color: #1e1810;
+  background-image: radial-gradient(circle at 15% 0%, rgba(196, 154, 108, 0.06), transparent 55%),
+                     radial-gradient(circle at 100% 30%, rgba(69, 112, 64, 0.08), transparent 45%);
   color: #f5f0e8;
 }

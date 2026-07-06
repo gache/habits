@@ -38,9 +38,13 @@ export function habitDaysElapsed(
  * have a completion for this habit.
  */
 export function calcStreak(completedDates: Set<string>): number {
-  const today = new Date()
+  const d = new Date()
+  const todayKey = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+  // Today isn't over yet — if it's not done, don't zero out an otherwise-alive
+  // streak; start counting from yesterday and only break if that's missing too.
+  if (!completedDates.has(todayKey)) d.setDate(d.getDate() - 1)
+
   let streak = 0
-  const d = new Date(today)
   while (true) {
     const key = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
     if (!completedDates.has(key)) break

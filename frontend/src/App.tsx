@@ -22,7 +22,7 @@ export default function App() {
   if (user === undefined) {
     return (
       <div className="min-h-screen bg-cream-100 flex items-center justify-center">
-        <p className="font-handwritten text-cream-400 text-xl">Loading...</p>
+        <p className="font-handwritten text-cream-400 text-xl">Cargando...</p>
       </div>
     )
   }

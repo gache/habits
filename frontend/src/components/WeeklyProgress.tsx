@@ -17,7 +17,7 @@ function getWeeks(year: number, month: number) {
   while (day <= total) {
     const end = Math.min(day + 6, total)
     weeks.push({
-      label: `WEEK ${weekNum}`,
+      label: `SEMANA ${weekNum}`,
       days: Array.from({ length: end - day + 1 }, (_, i) => day + i),
     })
     day = end + 1
@@ -35,7 +35,7 @@ export default function WeeklyProgress({ year, month, completions, habits }: Wee
 
   return (
     <div className="mt-6 border-t border-cream-300 dark:border-cream-600 pt-4">
-      <h3 className="font-handwritten text-cream-600 dark:text-cream-400 text-base mb-3 tracking-wide">WEEKLY PROGRESS</h3>
+      <h3 className="font-handwritten text-cream-600 dark:text-cream-400 text-base mb-3 tracking-wide">PROGRESO SEMANAL</h3>
       <div className="flex flex-col gap-2">
         {weeks.map(({ label, days }) => {
           let filled = 0
@@ -65,7 +65,7 @@ export default function WeeklyProgress({ year, month, completions, habits }: Wee
                     <div
                       key={day}
                       className="w-5 h-5 rounded-full border border-cream-300 dark:border-cream-600 transition-colors"
-                      style={{ backgroundColor: isFilled ? '#a08860' : 'transparent' }}
+                      style={{ backgroundColor: isFilled ? '#457040' : 'transparent' }}
                       title={dateStr}
                     />
                   )

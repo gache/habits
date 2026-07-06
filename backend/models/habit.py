@@ -10,7 +10,7 @@ class HabitCreate(BaseModel):
     active: bool = True
     icon: str = "⭐"
     color: str = "#d4c4a8"
-    order: int = 0
+    order: Optional[int] = None
 
 
 class HabitUpdate(BaseModel):

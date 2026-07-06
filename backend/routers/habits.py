@@ -10,22 +10,22 @@ from ..models.habit import HabitCreate, HabitOut, HabitUpdate
 router = APIRouter(prefix="/api/habits", tags=["habits"])
 
 DEFAULT_HABITS = [
-    {"icon": "💧", "name": "DRINK WATER",          "description": "8 GLASSES",      "color": "#a8d8ea", "order": 1},
-    {"icon": "🏃", "name": "EXERCISE",              "description": "30 MINUTES",     "color": "#b8e0b8", "order": 2},
-    {"icon": "🧘", "name": "MEDITATE",              "description": "15 MINUTES",     "color": "#d4a8d4", "order": 3},
-    {"icon": "📖", "name": "READ",                  "description": "20 MINUTES",     "color": "#f0c8a0", "order": 4},
-    {"icon": "📝", "name": "JOURNAL",               "description": "DAILY",          "color": "#f0e0a0", "order": 5},
-    {"icon": "🛏️","name": "SLEEP EARLY",            "description": "7-8 HOURS",      "color": "#a8c8e8", "order": 6},
-    {"icon": "🥗", "name": "EAT HEALTHY MEALS",     "description": None,             "color": "#b8d8a8", "order": 7},
-    {"icon": "📋", "name": "PLAN YOUR DAY",         "description": "EVERY MORNING",  "color": "#e8c8a8", "order": 8},
-    {"icon": "☀️", "name": "GET SUNLIGHT",          "description": "15 MINUTES",     "color": "#f8e0a0", "order": 9},
-    {"icon": "📵", "name": "LIMIT SCREEN TIME",     "description": "LESS IS BEST",   "color": "#f0b8b8", "order": 10},
-    {"icon": "💡", "name": "LEARN SOMETHING NEW",   "description": None,             "color": "#c8d8f0", "order": 11},
-    {"icon": "❤️", "name": "BE GRATEFUL",           "description": "DAILY",          "color": "#f0b8c8", "order": 12},
-    {"icon": "🧹", "name": "CLEAN / TIDY SOMETHING","description": None,             "color": "#c8e8d8", "order": 13},
-    {"icon": "💰", "name": "SAVE MONEY",            "description": "DAILY",          "color": "#d8f0b8", "order": 14},
-    {"icon": "💬", "name": "CONNECT WITH LOVED ONES","description": None,            "color": "#e8c8f0", "order": 15},
-    {"icon": "✈️", "name": "NO SPEND DAY",          "description": "WEEKLY",         "color": "#c8e0f0", "order": 16, "frequency": "weekly"},
+    {"icon": "💧", "name": "TOMAR AGUA",              "description": "8 VASOS",         "color": "#a8d8ea", "order": 1},
+    {"icon": "🏃", "name": "EJERCICIO",                "description": "30 MINUTOS",      "color": "#b8e0b8", "order": 2},
+    {"icon": "🧘", "name": "MEDITAR",                  "description": "15 MINUTOS",      "color": "#d4a8d4", "order": 3},
+    {"icon": "📖", "name": "LEER",                     "description": "20 MINUTOS",      "color": "#f0c8a0", "order": 4},
+    {"icon": "📝", "name": "ESCRIBIR DIARIO",          "description": "DIARIO",          "color": "#f0e0a0", "order": 5},
+    {"icon": "🛏️","name": "DORMIR TEMPRANO",           "description": "7-8 HORAS",       "color": "#a8c8e8", "order": 6},
+    {"icon": "🥗", "name": "COMER SALUDABLE",          "description": None,              "color": "#b8d8a8", "order": 7},
+    {"icon": "📋", "name": "PLANEAR TU DÍA",           "description": "CADA MAÑANA",     "color": "#e8c8a8", "order": 8},
+    {"icon": "☀️", "name": "TOMAR SOL",                "description": "15 MINUTOS",      "color": "#f8e0a0", "order": 9},
+    {"icon": "📵", "name": "LIMITAR PANTALLAS",        "description": "MENOS ES MÁS",    "color": "#f0b8b8", "order": 10},
+    {"icon": "💡", "name": "APRENDER ALGO NUEVO",      "description": None,              "color": "#c8d8f0", "order": 11},
+    {"icon": "❤️", "name": "SER AGRADECIDO",           "description": "DIARIO",          "color": "#f0b8c8", "order": 12},
+    {"icon": "🧹", "name": "LIMPIAR / ORDENAR ALGO",   "description": None,              "color": "#c8e8d8", "order": 13},
+    {"icon": "💰", "name": "AHORRAR DINERO",           "description": "DIARIO",          "color": "#d8f0b8", "order": 14},
+    {"icon": "💬", "name": "CONECTAR CON SERES QUERIDOS", "description": None,           "color": "#e8c8f0", "order": 15},
+    {"icon": "✈️", "name": "DÍA SIN GASTAR",           "description": "SEMANAL",         "color": "#c8e0f0", "order": 16, "frequency": "weekly"},
 ]
 
 
@@ -93,9 +93,12 @@ def get_habit(habit_id: str, uid: str = Depends(get_current_uid)):
 @router.post("", response_model=HabitOut, status_code=201)
 def create_habit(body: HabitCreate, uid: str = Depends(get_current_uid)):
     db = get_db()
+    habits_ref = db.collection("users").document(uid).collection("habits")
     now = datetime.now(timezone.utc)
     data = {**body.model_dump(), "created_at": now, "updated_at": now}
-    _, ref = db.collection("users").document(uid).collection("habits").add(data)
+    if data["order"] is None:
+        data["order"] = len(list(habits_ref.stream())) + 1
+    _, ref = habits_ref.add(data)
     doc = ref.get()
     return _doc_to_habit(doc)
 

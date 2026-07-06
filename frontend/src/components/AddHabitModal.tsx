@@ -15,6 +15,11 @@ const PRESET_COLORS = [
 ]
 
 const FREQUENCIES = ['daily', 'weekly', 'monthly'] as const
+const FREQUENCY_LABELS: Record<(typeof FREQUENCIES)[number], string> = {
+  daily: 'Diaria',
+  weekly: 'Semanal',
+  monthly: 'Mensual',
+}
 
 export default function AddHabitModal({ onClose, editing }: AddHabitModalProps) {
   const createHabit = useCreateHabit()
@@ -28,7 +33,7 @@ export default function AddHabitModal({ onClose, editing }: AddHabitModalProps) 
     frequency: editing?.frequency ?? 'daily',
     icon: editing?.icon ?? '⭐',
     color: editing?.color ?? '#a8d8ea',
-    order: editing?.order ?? 0,
+    order: editing?.order,
     active: editing?.active ?? true,
   })
 
@@ -79,17 +84,17 @@ export default function AddHabitModal({ onClose, editing }: AddHabitModalProps) 
         <button
           onClick={onClose}
           className="absolute top-3 right-4 text-cream-500 hover:text-cream-800 text-xl focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1 rounded"
-          aria-label="Close"
+          aria-label="Cerrar"
         >
           ×
         </button>
         <h2 className="font-handwritten text-xl text-cream-700 mb-4">
-          {editing ? 'Edit Habit' : 'Add New Habit'}
+          {editing ? 'Editar Hábito' : 'Agregar Nuevo Hábito'}
         </h2>
 
         {!editing && (
           <div className="mb-4">
-            <label className="block text-xs text-cream-600 mb-1.5">Quick add</label>
+            <label className="block text-xs text-cream-600 mb-1.5">Agregar rápido</label>
             <div className="flex flex-wrap gap-1.5">
               {HABIT_PRESETS.map((preset) => (
                 <button
@@ -109,13 +114,13 @@ export default function AddHabitModal({ onClose, editing }: AddHabitModalProps) 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <div className="flex gap-2">
             <div className="relative">
-              <label className="block text-xs text-cream-600 mb-1">Icon</label>
+              <label className="block text-xs text-cream-600 mb-1">Ícono</label>
               <button
                 type="button"
                 onClick={() => setShowEmojiPicker((v) => !v)}
                 aria-haspopup="true"
                 aria-expanded={showEmojiPicker}
-                aria-label={`Habit icon, currently ${form.icon}. Open emoji picker`}
+                aria-label={`Ícono del hábito, actualmente ${form.icon}. Abrir selector de emojis`}
                 className="w-12 h-9 border border-cream-300 rounded text-center text-lg bg-cream-100 hover:bg-cream-200 transition-colors focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1"
               >
                 {form.icon}
@@ -136,7 +141,7 @@ export default function AddHabitModal({ onClose, editing }: AddHabitModalProps) 
                         set('icon', emoji)
                         setShowEmojiPicker(false)
                       }}
-                      aria-label={`Use ${emoji} icon`}
+                      aria-label={`Usar ícono ${emoji}`}
                       className={[
                         'w-7 h-7 flex items-center justify-center rounded text-base hover:bg-cream-200 transition-colors focus:outline-none focus:ring-2 focus:ring-cream-400',
                         form.icon === emoji ? 'bg-cream-200' : '',
@@ -149,36 +154,36 @@ export default function AddHabitModal({ onClose, editing }: AddHabitModalProps) 
               )}
             </div>
             <div className="flex-1">
-              <label className="block text-xs text-cream-600 mb-1">Name *</label>
+              <label className="block text-xs text-cream-600 mb-1">Nombre *</label>
               <input
                 required
                 value={form.name}
                 onChange={(e) => set('name', e.target.value)}
-                placeholder="e.g. DRINK WATER"
+                placeholder="ej. TOMAR AGUA"
                 className="w-full border border-cream-300 rounded px-2 py-1.5 text-sm bg-cream-100 focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1 focus:border-cream-400 uppercase"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs text-cream-600 mb-1">Description</label>
+            <label className="block text-xs text-cream-600 mb-1">Descripción</label>
             <input
               value={form.description ?? ''}
               onChange={(e) => set('description', e.target.value)}
-              placeholder="e.g. 8 glasses"
+              placeholder="ej. 8 vasos"
               className="w-full border border-cream-300 rounded px-2 py-1.5 text-sm bg-cream-100 focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1 focus:border-cream-400"
             />
           </div>
 
           <div>
-            <label className="block text-xs text-cream-600 mb-1">Frequency</label>
+            <label className="block text-xs text-cream-600 mb-1">Frecuencia</label>
             <select
               value={form.frequency}
               onChange={(e) => set('frequency', e.target.value)}
               className="w-full border border-cream-300 rounded px-2 py-1.5 text-sm bg-cream-100 focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1 focus:border-cream-400"
             >
               {FREQUENCIES.map((f) => (
-                <option key={f} value={f}>{f.charAt(0).toUpperCase() + f.slice(1)}</option>
+                <option key={f} value={f}>{FREQUENCY_LABELS[f]}</option>
               ))}
             </select>
           </div>
@@ -191,11 +196,11 @@ export default function AddHabitModal({ onClose, editing }: AddHabitModalProps) 
                   type="button"
                   key={c}
                   onClick={() => set('color', c)}
-                  aria-label={`Select color ${c}`}
+                  aria-label={`Seleccionar color ${c}`}
                   className="w-7 h-7 rounded-full border-2 transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1"
                   style={{
                     backgroundColor: c,
-                    borderColor: form.color === c ? '#3d3020' : 'transparent',
+                    borderColor: form.color === c ? '#a84d2c' : 'transparent',
                   }}
                 />
               ))}
@@ -205,9 +210,9 @@ export default function AddHabitModal({ onClose, editing }: AddHabitModalProps) 
           <button
             type="submit"
             disabled={createHabit.isPending || updateHabit.isPending}
-            className="mt-2 bg-cream-800 text-cream-50 rounded px-4 py-2 text-sm font-bold hover:bg-cream-700 disabled:opacity-50 transition-colors focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1"
+            className="mt-2 bg-terracotta-600 text-cream-50 rounded px-4 py-2 text-sm font-bold hover:bg-terracotta-700 disabled:opacity-50 transition-colors focus:outline-none focus:ring-2 focus:ring-terracotta-400 focus:ring-offset-1"
           >
-            {editing ? 'Save Changes' : 'Add Habit'}
+            {editing ? 'Guardar Cambios' : 'Agregar Hábito'}
           </button>
         </form>
       </div>
