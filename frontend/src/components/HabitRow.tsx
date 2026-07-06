@@ -145,15 +145,21 @@ export default function HabitRow({ habit, days, monthStr, today, totalDays, comp
           const dateStr = `${monthStr}-${pad(day)}`
           const completed = completedDates.has(dateStr)
           const isFutureUncompleted = dateStr > today && !completed
+          // Days before the habit existed are excluded from its progress %
+          // (see habitDaysElapsed) — disable them too so the grid can't show
+          // an "unchecked" box that silently doesn't count against it.
+          const isBeforeCreation = !completed && !!habit.created_at && dateStr < habit.created_at.slice(0, 10)
+          const disabled = isFutureUncompleted || isBeforeCreation
           return (
             <DayCell
               key={day}
               completed={completed}
               color={habit.color}
               isToday={dateStr === today}
-              disabled={isFutureUncompleted}
+              disabled={disabled}
+              disabledReason={isFutureUncompleted ? 'future' : isBeforeCreation ? 'before-creation' : undefined}
               dateLabel={dateStr}
-              onClick={() => { if (!isFutureUncompleted) onToggle(habit.id, dateStr, completed) }}
+              onClick={() => { if (!disabled) onToggle(habit.id, dateStr, completed) }}
             />
           )
         })}

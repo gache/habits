@@ -2,12 +2,17 @@ interface DayCellProps {
   completed: boolean
   color: string
   isToday: boolean
-  disabled?: boolean // future date with nothing to undo — can't be marked complete
+  disabled?: boolean // future date, or before the habit existed — nothing to undo, can't be marked complete
+  disabledReason?: 'future' | 'before-creation'
   dateLabel: string  // e.g. "2025-06-15" — for aria-label
   onClick: () => void
 }
 
-export default function DayCell({ completed, color, isToday, disabled, dateLabel, onClick }: DayCellProps) {
+export default function DayCell({ completed, color, isToday, disabled, disabledReason, dateLabel, onClick }: DayCellProps) {
+  const disabledLabel = disabledReason === 'before-creation' ? ', antes de crear el hábito' : ', fecha futura'
+  const disabledTitle = disabledReason === 'before-creation'
+    ? 'El hábito no existía en esta fecha'
+    : 'No se puede completar una fecha futura'
   return (
     <td className="p-0 text-center align-middle">
       {/* Button is a larger tap target (32px) than the visual swatch inside
@@ -18,8 +23,8 @@ export default function DayCell({ completed, color, isToday, disabled, dateLabel
       <button
         onClick={onClick}
         disabled={disabled}
-        aria-label={`${dateLabel}, ${completed ? 'completado' : 'no completado'}${disabled ? ', fecha futura' : ''}`}
-        title={disabled ? 'No se puede completar una fecha futura' : completed ? 'Marcar como no hecho' : 'Marcar como hecho'}
+        aria-label={`${dateLabel}, ${completed ? 'completado' : 'no completado'}${disabled ? disabledLabel : ''}`}
+        title={disabled ? disabledTitle : completed ? 'Marcar como no hecho' : 'Marcar como hecho'}
         className={[
           'w-8 h-8 mx-auto flex items-center justify-center transition-all',
           disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer',

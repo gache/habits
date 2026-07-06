@@ -159,14 +159,18 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
                     const dateStr = `${monthStr}-${pad(day)}`
                     const completed = done.has(dateStr)
                     const isFuture = dateStr > today
+                    // Matches habitDaysElapsed: days before the habit existed
+                    // don't count toward its % — dim them like future days so
+                    // an "empty" box doesn't look like a missed day.
+                    const isBeforeCreation = !completed && !!habit.created_at && dateStr < habit.created_at.slice(0, 10)
                     return (
                       <td key={day} className="p-0 text-center">
                         <div
                           className="w-4 h-4 mx-auto rounded-sm border"
                           style={{
                             backgroundColor: completed ? habit.color : 'transparent',
-                            borderColor: isFuture ? 'transparent' : completed ? habit.color : '#a08860',
-                            opacity: isFuture ? 0.2 : 1,
+                            borderColor: isFuture || isBeforeCreation ? 'transparent' : completed ? habit.color : '#a08860',
+                            opacity: isFuture || isBeforeCreation ? 0.2 : 1,
                           }}
                         />
                       </td>
