@@ -4,6 +4,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from ..auth import get_current_uid
+from ..date_utils import is_weekday, period_bounds
 from ..firebase import get_db
 from ..models.completion import CompletionCreate, CompletionOut
 
@@ -32,6 +33,34 @@ def mark_complete(
     existing = completions_ref.where("habit_id", "==", habit_id).where("date", "==", body.date).limit(1).get()
     if existing:
         return _doc_to_completion(existing[0])
+
+    habit_doc = db.collection("users").document(uid).collection("habits").document(habit_id).get()
+    frequency = habit_doc.to_dict().get("frequency", "daily") if habit_doc.exists else "daily"
+
+    if frequency == "weekly" and not is_weekday(body.date):
+        raise HTTPException(
+            status_code=422,
+            detail="Este hábito solo se puede marcar de lunes a viernes.",
+        )
+
+    # Weekly habits allow a check on any weekday (Mon-Fri) in the same week —
+    # only monthly enforces one check per period.
+    bounds = period_bounds(frequency, body.date) if frequency == "monthly" else None
+    if bounds:
+        start, end = bounds
+        clashing = (
+            completions_ref.where("habit_id", "==", habit_id)
+            .where("date", ">=", start)
+            .where("date", "<=", end)
+            .limit(1)
+            .get()
+        )
+        if clashing:
+            raise HTTPException(
+                status_code=409,
+                detail="Este hábito ya tiene un check en este período.",
+            )
+
     now = datetime.now(timezone.utc)
     _, ref = completions_ref.add({"habit_id": habit_id, "date": body.date, "created_at": now})
     return _doc_to_completion(ref.get())

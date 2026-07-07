@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { pad, getDaysInMonth, habitDaysElapsed, calcStreak, calcBestStreak } from '../date-utils'
+import { pad, getDaysInMonth, habitDaysElapsed, habitPeriodsElapsed, calcStreak, calcBestStreak, periodBounds, isPeriodLocked, isWeekday, countCompletedPeriods } from '../date-utils'
 
 describe('pad', () => {
   it('pads single digits with a leading zero', () => {
@@ -40,6 +40,95 @@ describe('habitDaysElapsed', () => {
 
   it('returns full daysElapsed when habit created within the same month (backfill allowed)', () => {
     expect(habitDaysElapsed('2026-07-10T00:00:00Z', '2026-07', 15)).toBe(15)
+  })
+})
+
+describe('habitPeriodsElapsed', () => {
+  it('returns 0 when no days have elapsed', () => {
+    expect(habitPeriodsElapsed('daily', 0)).toBe(0)
+    expect(habitPeriodsElapsed('weekly', 0)).toBe(0)
+    expect(habitPeriodsElapsed('monthly', 0)).toBe(0)
+  })
+
+  it('daily counts every elapsed day', () => {
+    expect(habitPeriodsElapsed('daily', 15)).toBe(15)
+  })
+
+  it('weekly counts elapsed 7-day chunks, rounding up a partial one', () => {
+    expect(habitPeriodsElapsed('weekly', 7)).toBe(1)
+    expect(habitPeriodsElapsed('weekly', 8)).toBe(2)
+    expect(habitPeriodsElapsed('weekly', 15)).toBe(3)
+  })
+
+  it('monthly is a single period regardless of how many days elapsed', () => {
+    expect(habitPeriodsElapsed('monthly', 1)).toBe(1)
+    expect(habitPeriodsElapsed('monthly', 31)).toBe(1)
+  })
+})
+
+describe('periodBounds', () => {
+  it('returns null for daily', () => {
+    expect(periodBounds('daily', '2026-07-15')).toBeNull()
+  })
+
+  it('spans the whole month for monthly', () => {
+    expect(periodBounds('monthly', '2026-07-15')).toEqual(['2026-07-01', '2026-07-32'])
+  })
+
+  it('spans the real ISO week (Monday-Sunday) for weekly', () => {
+    expect(periodBounds('weekly', '2026-07-02')).toEqual(['2026-06-29', '2026-07-05']) // Thursday
+    expect(periodBounds('weekly', '2026-07-08')).toEqual(['2026-07-06', '2026-07-12']) // Wednesday
+    expect(periodBounds('weekly', '2026-07-05')).toEqual(['2026-06-29', '2026-07-05']) // Sunday
+    expect(periodBounds('weekly', '2026-07-06')).toEqual(['2026-07-06', '2026-07-12']) // Monday
+  })
+})
+
+describe('isWeekday', () => {
+  it('is true for Monday through Friday', () => {
+    expect(isWeekday('2026-07-06')).toBe(true) // Monday
+    expect(isWeekday('2026-07-10')).toBe(true) // Friday
+  })
+
+  it('is false for Saturday and Sunday', () => {
+    expect(isWeekday('2026-07-04')).toBe(false) // Saturday
+    expect(isWeekday('2026-07-05')).toBe(false) // Sunday
+  })
+})
+
+describe('isPeriodLocked', () => {
+  it('is never locked for daily habits', () => {
+    expect(isPeriodLocked('daily', '2026-07-05', new Set(['2026-07-01']))).toBe(false)
+  })
+
+  it('never locks a weekly habit — any weekday in the week stays available', () => {
+    expect(isPeriodLocked('weekly', '2026-07-02', new Set(['2026-07-02']))).toBe(false)
+    expect(isPeriodLocked('weekly', '2026-07-03', new Set(['2026-07-02']))).toBe(false)
+  })
+
+  it('locks the whole month for a monthly habit', () => {
+    expect(isPeriodLocked('monthly', '2026-07-28', new Set(['2026-07-05']))).toBe(true)
+  })
+})
+
+describe('countCompletedPeriods', () => {
+  it('counts every date for daily habits', () => {
+    expect(countCompletedPeriods('daily', new Set(['2026-07-01', '2026-07-02']), '2026-07-31')).toBe(2)
+  })
+
+  it('collapses multiple weekday checks in the same week into one', () => {
+    expect(countCompletedPeriods('weekly', new Set(['2026-07-01', '2026-07-02']), '2026-07-31')).toBe(1)
+  })
+
+  it('counts separate weeks individually', () => {
+    expect(countCompletedPeriods('weekly', new Set(['2026-07-02', '2026-07-08']), '2026-07-31')).toBe(2)
+  })
+
+  it('excludes dates after today', () => {
+    expect(countCompletedPeriods('daily', new Set(['2026-07-01', '2026-08-01']), '2026-07-31')).toBe(1)
+  })
+
+  it('counts one per month for monthly habits', () => {
+    expect(countCompletedPeriods('monthly', new Set(['2026-07-05']), '2026-07-31')).toBe(1)
   })
 })
 
