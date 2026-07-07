@@ -7,7 +7,7 @@ import AddHabitModal from './AddHabitModal'
 import ConfirmDialog from './ConfirmDialog'
 import StreakCelebration from './StreakCelebration'
 import Toast from './Toast'
-import { pad, calcStreak, habitDaysElapsed, isCompletionCountable } from '@/lib/date-utils'
+import { pad, calcStreak, calcBestStreak, habitDaysElapsed, isCompletionCountable } from '@/lib/date-utils'
 import { getStreakLevel, type StreakLevel } from '@/lib/streak-levels'
 
 const celebratedKey = (habitId: string) => `habit-streak-celebrated:${habitId}`
@@ -39,28 +39,34 @@ export default function HabitRow({ habit, days, monthStr, today, totalDays, comp
   const total = completedDates.size
   const streak = calcStreak(completedDates)
   const streakLevel = showStreak ? getStreakLevel(streak) : null
+  // Celebration triggers off the best run ever logged, not just the streak
+  // ending today — backfilling an old 3-in-a-row (now that any past day can
+  // be checked) is just as worth celebrating as building one in real time.
+  const bestStreak = calcBestStreak(completedDates)
 
   useEffect(() => {
     if (!showStreak) return
 
-    // If the streak dropped since we last saw it, it broke — forget which
-    // tiers were celebrated so rebuilding past them celebrates again.
+    // If the best streak dropped since we last saw it (a backfilled day got
+    // unchecked), forget which tiers were celebrated so rebuilding past them
+    // celebrates again.
     const lastKey = lastStreakKey(habit.id)
-    const lastStreak = Number(localStorage.getItem(lastKey) ?? 0)
-    if (streak < lastStreak) {
+    const lastBest = Number(localStorage.getItem(lastKey) ?? 0)
+    if (bestStreak < lastBest) {
       localStorage.removeItem(celebratedKey(habit.id))
     }
-    localStorage.setItem(lastKey, String(streak))
+    localStorage.setItem(lastKey, String(bestStreak))
 
-    if (!streakLevel) return
+    const bestLevel = getStreakLevel(bestStreak)
+    if (!bestLevel) return
     const key = celebratedKey(habit.id)
     const lastCelebrated = Number(localStorage.getItem(key) ?? 0)
-    if (streakLevel.days > lastCelebrated) {
-      localStorage.setItem(key, String(streakLevel.days))
-      setCelebrating({ level: streakLevel, streak })
+    if (bestLevel.days > lastCelebrated) {
+      localStorage.setItem(key, String(bestLevel.days))
+      setCelebrating({ level: bestLevel, streak: bestStreak })
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [habit.id, streak, showStreak])
+  }, [habit.id, bestStreak, showStreak])
 
   const completedUpToToday = completions.filter(
     (c) => c.habit_id === habit.id && isCompletionCountable(habit.created_at, c.date, today),
