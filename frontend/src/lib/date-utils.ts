@@ -16,8 +16,9 @@ export function todayStr(): string {
 
 /**
  * Days a habit could have been completed within a given month, capped to
- * daysElapsed. Accounts for habits created partway through the month so
- * progress denominators aren't inflated by days before the habit existed.
+ * daysElapsed. Any day up to today can be backfilled regardless of the
+ * exact day the habit was created — this only zeroes out months entirely
+ * outside the habit's lifetime (e.g. viewing a month before it existed).
  */
 export function habitDaysElapsed(
   createdAt: string | null,
@@ -25,30 +26,20 @@ export function habitDaysElapsed(
   daysElapsed: number,
 ): number {
   if (!createdAt) return daysElapsed
-  const createdDate = createdAt.slice(0, 10) // "YYYY-MM-DD"
-  const createdMonth = createdDate.slice(0, 7)
-  if (createdMonth < monthStr) return daysElapsed
-  if (createdMonth > monthStr) return 0
-  const startDay = parseInt(createdDate.slice(8, 10), 10)
-  return Math.max(0, daysElapsed - startDay + 1)
+  const createdMonth = createdAt.slice(0, 7)
+  return createdMonth <= monthStr ? daysElapsed : 0
 }
 
 /**
- * Whether a completion should count toward a habit's progress %. Must be
- * on or before today AND on or after the habit's creation date — completions
- * seeded/backdated before a habit existed must not inflate its numerator
- * while habitDaysElapsed excludes those same days from the denominator
- * (otherwise numerator > denominator and Math.min(100, …) silently masks it
- * as a false 100%).
+ * Whether a completion should count toward a habit's progress % — any date
+ * up to today, since past days can be freely backfilled.
  */
 export function isCompletionCountable(
   createdAt: string | null,
   date: string, // "YYYY-MM-DD"
   today: string, // "YYYY-MM-DD"
 ): boolean {
-  if (date > today) return false
-  if (createdAt && date < createdAt.slice(0, 10)) return false
-  return true
+  return date <= today
 }
 
 /**

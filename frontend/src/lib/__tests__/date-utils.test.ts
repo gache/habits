@@ -38,9 +38,8 @@ describe('habitDaysElapsed', () => {
     expect(habitDaysElapsed('2026-08-01T00:00:00Z', '2026-07', 15)).toBe(0)
   })
 
-  it('caps elapsed days to days since creation within the same month', () => {
-    // created on the 10th, 15 days elapsed in month -> 15 - 10 + 1 = 6
-    expect(habitDaysElapsed('2026-07-10T00:00:00Z', '2026-07', 15)).toBe(6)
+  it('returns full daysElapsed when habit created within the same month (backfill allowed)', () => {
+    expect(habitDaysElapsed('2026-07-10T00:00:00Z', '2026-07', 15)).toBe(15)
   })
 })
 
