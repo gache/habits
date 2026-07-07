@@ -24,7 +24,7 @@ export interface HabitCreate {
   order?: number
 }
 
-export interface HabitUpdate extends Partial<HabitCreate> {}
+export type HabitUpdate = Partial<HabitCreate>
 
 export function useHabits(active?: boolean) {
   return useQuery<Habit[]>({

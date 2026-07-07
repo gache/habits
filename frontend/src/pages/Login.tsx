@@ -28,8 +28,8 @@ export default function Login() {
     try {
       await sendPasswordResetEmail(auth, email)
       setInfo('Te enviamos un correo para restablecer tu contraseña.')
-    } catch (err: any) {
-      setError(err?.message ?? 'Error al enviar el correo de recuperación')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al enviar el correo de recuperación')
     } finally {
       setLoading(false)
     }
@@ -45,8 +45,8 @@ export default function Login() {
       } else {
         await signInWithEmailAndPassword(auth, email, password)
       }
-    } catch (err: any) {
-      setError(err?.message ?? 'Error de autenticación')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error de autenticación')
     } finally {
       setLoading(false)
     }
@@ -57,8 +57,8 @@ export default function Login() {
     setLoading(true)
     try {
       await signInWithPopup(auth, new GoogleAuthProvider())
-    } catch (err: any) {
-      setError(err?.message ?? 'Error al iniciar sesión con Google')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al iniciar sesión con Google')
     } finally {
       setLoading(false)
     }

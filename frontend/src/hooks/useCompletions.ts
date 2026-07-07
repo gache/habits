@@ -33,7 +33,7 @@ export function useCompletionsForMonths(months: string[]) {
 export function useToggleCompletion(month: string) {
   const qc = useQueryClient()
 
-  const markMutation = useMutation<Completion, Error, { habitId: string; date: string }>({
+  const markMutation = useMutation<Completion, Error, { habitId: string; date: string }, { prev: Completion[] }>({
     mutationFn: async ({ habitId, date }) => {
       const { data } = await api.post(`/api/habits/${habitId}/complete`, { date })
       return data
@@ -45,13 +45,13 @@ export function useToggleCompletion(month: string) {
       qc.setQueryData<Completion[]>(['completions', month], [...prev, optimistic])
       return { prev }
     },
-    onError: (_err, _vars, ctx: any) => {
-      qc.setQueryData(['completions', month], ctx.prev)
+    onError: (_err, _vars, ctx) => {
+      qc.setQueryData(['completions', month], ctx?.prev)
     },
     onSettled: () => qc.invalidateQueries({ queryKey: ['completions', month] }),
   })
 
-  const unmarkMutation = useMutation<void, Error, { habitId: string; date: string }>({
+  const unmarkMutation = useMutation<void, Error, { habitId: string; date: string }, { prev: Completion[] }>({
     mutationFn: async ({ habitId, date }) => {
       await api.delete(`/api/habits/${habitId}/complete`, { params: { date } })
     },
@@ -64,8 +64,8 @@ export function useToggleCompletion(month: string) {
       )
       return { prev }
     },
-    onError: (_err, _vars, ctx: any) => {
-      qc.setQueryData(['completions', month], ctx.prev)
+    onError: (_err, _vars, ctx) => {
+      qc.setQueryData(['completions', month], ctx?.prev)
     },
     onSettled: () => qc.invalidateQueries({ queryKey: ['completions', month] }),
   })

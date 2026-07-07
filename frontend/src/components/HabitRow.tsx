@@ -63,9 +63,10 @@ export default function HabitRow({ habit, days, monthStr, today, totalDays, comp
     const lastCelebrated = Number(localStorage.getItem(key) ?? 0)
     if (bestLevel.days > lastCelebrated) {
       localStorage.setItem(key, String(bestLevel.days))
+      // Triggers only when bestStreak crosses a new milestone, not on every render.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCelebrating({ level: bestLevel, streak: bestStreak })
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [habit.id, bestStreak, showStreak])
 
   const completedUpToToday = completions.filter(

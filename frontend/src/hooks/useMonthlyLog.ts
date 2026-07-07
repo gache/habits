@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import axios from 'axios'
 import api from '@/lib/api'
 
 export interface MonthlyLog {
@@ -27,8 +28,8 @@ export function useUpdateMonthlyLog(month: string) {
       try {
         const { data } = await api.patch(`/api/monthly-log/${month}`, updates)
         return data
-      } catch (err: any) {
-        if (err?.response?.status === 404) {
+      } catch (err) {
+        if (axios.isAxiosError(err) && err.response?.status === 404) {
           const { data } = await api.post('/api/monthly-log', { month, ...updates })
           return data
         }

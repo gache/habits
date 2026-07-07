@@ -1,5 +1,7 @@
 import { useRef } from 'react'
-import { useMonthlyLog, useUpdateMonthlyLog } from '@/hooks/useMonthlyLog'
+import { useMonthlyLog, useUpdateMonthlyLog, type MonthlyLog as MonthlyLogData } from '@/hooks/useMonthlyLog'
+
+type ReflectionField = Exclude<keyof MonthlyLogData, 'month'>
 
 interface MonthlyLogProps {
   month: string // "YYYY-MM"
@@ -10,7 +12,7 @@ export default function MonthlyLog({ month }: MonthlyLogProps) {
   const { mutate: update } = useUpdateMonthlyLog(month)
   const timers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
 
-  const debounce = (field: string, value: string) => {
+  const debounce = (field: ReflectionField, value: string) => {
     if (timers.current[field]) clearTimeout(timers.current[field])
     timers.current[field] = setTimeout(() => update({ [field]: value }), 800)
   }
@@ -33,15 +35,17 @@ export default function MonthlyLog({ month }: MonthlyLogProps) {
       {/* Reflections */}
       <div className="flex flex-col gap-3">
         <h3 className="font-handwritten text-cream-600 dark:text-cream-400 text-base tracking-wide">REFLEXIÓN MENSUAL</h3>
-        {[
-          { field: 'reflection_well',    label: '¿Qué salió bien este mes?' },
-          { field: 'reflection_improve', label: '¿Qué puedo mejorar?' },
-          { field: 'reflection_proud',   label: 'Estoy orgulloso/a de mí por...' },
-        ].map(({ field, label }) => (
+        {(
+          [
+            { field: 'reflection_well',    label: '¿Qué salió bien este mes?' },
+            { field: 'reflection_improve', label: '¿Qué puedo mejorar?' },
+            { field: 'reflection_proud',   label: 'Estoy orgulloso/a de mí por...' },
+          ] as const
+        ).map(({ field, label }) => (
           <div key={field}>
             <label className="block text-xs text-cream-600 dark:text-cream-400 mb-1 font-sans">{label}</label>
             <textarea
-              defaultValue={(log as any)?.[field] ?? ''}
+              defaultValue={log?.[field] ?? ''}
               key={`${field}-${month}`}
               onChange={(e) => debounce(field, e.target.value)}
               rows={2}

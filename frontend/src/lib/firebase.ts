@@ -7,7 +7,7 @@ const DEMO = import.meta.env.VITE_DEMO_MODE === 'true'
 // In demo mode we never call any real Firebase method.
 const demoAuth = {
   currentUser: { uid: 'demo-user', email: 'demo@example.com', getIdToken: async () => 'demo-token' },
-  onAuthStateChanged: (_o: any) => () => {},
+  onAuthStateChanged: (_observer: unknown) => () => {},
 } as unknown as ReturnType<typeof getAuth>
 
 function getRealAuth() {
