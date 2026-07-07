@@ -34,6 +34,24 @@ export function habitDaysElapsed(
 }
 
 /**
+ * Whether a completion should count toward a habit's progress %. Must be
+ * on or before today AND on or after the habit's creation date — completions
+ * seeded/backdated before a habit existed must not inflate its numerator
+ * while habitDaysElapsed excludes those same days from the denominator
+ * (otherwise numerator > denominator and Math.min(100, …) silently masks it
+ * as a false 100%).
+ */
+export function isCompletionCountable(
+  createdAt: string | null,
+  date: string, // "YYYY-MM-DD"
+  today: string, // "YYYY-MM-DD"
+): boolean {
+  if (date > today) return false
+  if (createdAt && date < createdAt.slice(0, 10)) return false
+  return true
+}
+
+/**
  * Current streak: how many consecutive days ending on or before today
  * have a completion for this habit.
  */

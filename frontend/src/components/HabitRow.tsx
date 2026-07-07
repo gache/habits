@@ -6,7 +6,8 @@ import DayCell from './DayCell'
 import AddHabitModal from './AddHabitModal'
 import ConfirmDialog from './ConfirmDialog'
 import StreakCelebration from './StreakCelebration'
-import { pad, calcStreak, habitDaysElapsed } from '@/lib/date-utils'
+import Toast from './Toast'
+import { pad, calcStreak, habitDaysElapsed, isCompletionCountable } from '@/lib/date-utils'
 import { getStreakLevel, type StreakLevel } from '@/lib/streak-levels'
 
 const celebratedKey = (habitId: string) => `habit-streak-celebrated:${habitId}`
@@ -26,6 +27,7 @@ interface HabitRowProps {
 export default function HabitRow({ habit, days, monthStr, today, totalDays, completions, showStreak = true, onToggle }: HabitRowProps) {
   const [editing, setEditing] = useState(false)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [celebrating, setCelebrating] = useState<{ level: StreakLevel; streak: number } | null>(null)
   const deleteHabit = useDeleteHabit()
   const updateHabit = useUpdateHabit()
@@ -61,18 +63,29 @@ export default function HabitRow({ habit, days, monthStr, today, totalDays, comp
   }, [habit.id, streak, showStreak])
 
   const completedUpToToday = completions.filter(
-    (c) => c.habit_id === habit.id && c.date <= today,
+    (c) => c.habit_id === habit.id && isCompletionCountable(habit.created_at, c.date, today),
   ).length
   const effectiveDays = habitDaysElapsed(habit.created_at, monthStr, totalDays)
   const progressPct = effectiveDays > 0 ? Math.min(100, Math.round((completedUpToToday / effectiveDays) * 100)) : 0
 
   const handleDelete = () => {
-    deleteHabit.mutate(habit.id)
     setConfirmingDelete(false)
+    setDeleting(true)
   }
 
   const handleArchive = () => {
     updateHabit.mutate({ id: habit.id, updates: { active: false } })
+  }
+
+  if (deleting) {
+    return (
+      <Toast
+        message={`"${habit.name}" eliminado`}
+        actionLabel="Deshacer"
+        onAction={() => setDeleting(false)}
+        onTimeout={() => deleteHabit.mutate(habit.id)}
+      />
+    )
   }
 
   return (
@@ -183,7 +196,7 @@ export default function HabitRow({ habit, days, monthStr, today, totalDays, comp
       {confirmingDelete && (
         <ConfirmDialog
           title="Eliminar hábito"
-          message={`¿Eliminar "${habit.name}"? Esta acción no se puede deshacer.`}
+          message={`¿Eliminar "${habit.name}"? Tendrás unos segundos para deshacerlo después.`}
           confirmLabel="Eliminar"
           danger
           onConfirm={handleDelete}

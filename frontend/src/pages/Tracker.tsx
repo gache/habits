@@ -12,7 +12,8 @@ import WeeklyProgress from '@/components/WeeklyProgress'
 import MonthlyLog from '@/components/MonthlyLog'
 import AddHabitModal from '@/components/AddHabitModal'
 import BestStreaks from '@/components/BestStreaks'
-import { pad, getDaysInMonth, todayStr, habitDaysElapsed } from '@/lib/date-utils'
+import { pad, getDaysInMonth, todayStr, habitDaysElapsed, isCompletionCountable } from '@/lib/date-utils'
+import { getProgressColor } from '@/lib/progress-color'
 
 const DEMO = import.meta.env.VITE_DEMO_MODE === 'true'
 
@@ -45,12 +46,12 @@ export default function Tracker() {
   const completedUpToToday = completions.filter((c) => {
     const h = habits.find((h) => h.id === c.habit_id)
     if (!h) return false
-    return habitDaysElapsed(h.created_at, monthStr, daysElapsed) > 0 && c.date <= today
+    return isCompletionCountable(h.created_at, c.date, today)
   }).length
   const globalPct = totalPossible > 0
     ? Math.min(100, Math.round((completedUpToToday / totalPossible) * 100))
     : null
-  const pctColor = globalPct === null ? '#a88c58' : globalPct >= 80 ? '#457040' : globalPct >= 50 ? '#c2603a' : '#ef4444'
+  const pctColor = globalPct === null ? '#a88c58' : getProgressColor(globalPct)
 
   const prevMonth = () => {
     if (month === 1) { setYear((y) => y - 1); setMonth(12) }

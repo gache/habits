@@ -4,7 +4,8 @@ import { CaretLeft, CalendarBlank, Target, CheckCircle, TrendUp, Star, NotePenci
 import { useHabits, type Habit } from '@/hooks/useHabits'
 import { useCompletions, useCompletionsForMonths } from '@/hooks/useCompletions'
 import { useMonthlyLog } from '@/hooks/useMonthlyLog'
-import { getDaysInMonth, pad, todayStr, habitDaysElapsed } from '@/lib/date-utils'
+import { getDaysInMonth, pad, todayStr, habitDaysElapsed, isCompletionCountable } from '@/lib/date-utils'
+import { getProgressColor, getProgressBg } from '@/lib/progress-color'
 import BestStreaks from '@/components/BestStreaks'
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -45,12 +46,17 @@ function MonthCard({ year, month, habits, isSelected, onClick }: MonthCardProps)
   const today = todayStr()
   const isCurrentMonth = monthStr === today.slice(0, 7)
   const daysElapsed = isCurrentMonth ? parseInt(today.slice(8), 10) : getDaysInMonth(year, month)
-  const totalPossible = habits.length * daysElapsed
-  const totalCompleted = completions.filter((c) => c.date <= today).length
-  const pct = totalPossible > 0 ? Math.round((totalCompleted / totalPossible) * 100) : 0
+  const totalPossible = habits.reduce(
+    (sum, h) => sum + habitDaysElapsed(h.created_at, monthStr, daysElapsed), 0,
+  )
+  const totalCompleted = completions.filter((c) => {
+    const h = habits.find((h) => h.id === c.habit_id)
+    return !!h && isCompletionCountable(h.created_at, c.date, today)
+  }).length
+  const pct = totalPossible > 0 ? Math.min(100, Math.round((totalCompleted / totalPossible) * 100)) : 0
 
-  const color = pct >= 80 ? '#457040' : pct >= 50 ? '#c2603a' : '#ef4444'
-  const bgColor = pct >= 80 ? 'bg-sage-50 dark:bg-sage-900/30' : pct >= 50 ? 'bg-terracotta-50 dark:bg-terracotta-900/30' : 'bg-red-50 dark:bg-red-950/20'
+  const color = getProgressColor(pct)
+  const bgColor = getProgressBg(pct)
 
   return (
     <button
@@ -73,8 +79,9 @@ function MonthCard({ year, month, habits, isSelected, onClick }: MonthCardProps)
       {/* Mini bar per habit */}
       <div className="flex flex-col gap-1">
         {habits.map((h) => {
-          const done = completions.filter((c) => c.habit_id === h.id && c.date <= today).length
-          const hp = daysElapsed > 0 ? Math.round((done / daysElapsed) * 100) : 0
+          const done = completions.filter((c) => c.habit_id === h.id && isCompletionCountable(h.created_at, c.date, today)).length
+          const effectiveDays = habitDaysElapsed(h.created_at, monthStr, daysElapsed)
+          const hp = effectiveDays > 0 ? Math.min(100, Math.round((done / effectiveDays) * 100)) : 0
           return (
             <div key={h.id} className="flex items-center gap-1.5">
               <span className="text-xs w-4 text-center">{h.icon}</span>
@@ -141,8 +148,9 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
           <tbody>
             {habits.map((habit) => {
               const done = new Set(completions.filter((c) => c.habit_id === habit.id).map((c) => c.date))
-              // Only count completions up to today to avoid inflated % from future-dated seed data
-              const completedUpToToday = [...done].filter((d) => d <= today).length
+              // Only count completions within the habit's actual lifetime, so
+              // pre-creation/future-dated seed data can't inflate the %.
+              const completedUpToToday = [...done].filter((d) => isCompletionCountable(habit.created_at, d, today)).length
               const effectiveDays = habitDaysElapsed(habit.created_at, monthStr, daysElapsed)
               const pct = effectiveDays > 0 ? Math.min(100, Math.round((completedUpToToday / effectiveDays) * 100)) : 0
               return (
@@ -177,7 +185,7 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
                     )
                   })}
                   <td className="px-2 text-center">
-                    <span className="font-sans font-bold" style={{ color: pct >= 80 ? '#457040' : pct >= 50 ? '#c2603a' : '#ef4444' }}>
+                    <span className="font-sans font-bold" style={{ color: getProgressColor(pct) }}>
                       {pct}%
                     </span>
                   </td>
