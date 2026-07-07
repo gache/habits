@@ -35,6 +35,16 @@ def test_active_filter_splits_seeded_habits(client):
     assert inactive[0]["id"] == first_id
 
 
+def test_deleting_all_habits_does_not_reseed_defaults(client):
+    all_habits = client.get("/api/habits").json()
+    for h in all_habits:
+        client.delete(f"/api/habits/{h['id']}")
+
+    r = client.get("/api/habits")
+    assert r.status_code == 200
+    assert r.json() == []
+
+
 def test_update_missing_habit_404s(client):
     r = client.patch("/api/habits/does-not-exist", json={"name": "x"})
     assert r.status_code == 404

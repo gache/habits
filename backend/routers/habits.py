@@ -30,7 +30,8 @@ DEFAULT_HABITS = [
 
 
 def _seed_habits(db, uid: str):
-    habits_ref = db.collection("users").document(uid).collection("habits")
+    user_ref = db.collection("users").document(uid)
+    habits_ref = user_ref.collection("habits")
     now = datetime.now(timezone.utc)
     for h in DEFAULT_HABITS:
         habits_ref.add({
@@ -44,6 +45,7 @@ def _seed_habits(db, uid: str):
             "created_at": now,
             "updated_at": now,
         })
+    user_ref.set({"seeded": True}, merge=True)
 
 
 def _doc_to_habit(doc) -> HabitOut:
@@ -68,10 +70,13 @@ def list_habits(
     uid: str = Depends(get_current_uid),
 ):
     db = get_db()
-    habits_ref = db.collection("users").document(uid).collection("habits")
+    user_ref = db.collection("users").document(uid)
+    habits_ref = user_ref.collection("habits")
 
-    # Seed defaults on first visit
-    if not habits_ref.limit(1).get():
+    # Seed defaults once, on the user's actual first visit — not every time
+    # the list happens to be empty (e.g. after deliberately deleting all habits).
+    user_doc = user_ref.get()
+    if not (user_doc.exists and user_doc.to_dict().get("seeded")):
         _seed_habits(db, uid)
 
     query = habits_ref.order_by("order")

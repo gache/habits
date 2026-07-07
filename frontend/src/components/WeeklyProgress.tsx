@@ -2,6 +2,8 @@ import { type Habit } from '@/hooks/useHabits'
 import { type Completion } from '@/hooks/useCompletions'
 import { getDaysInMonth, pad, todayStr } from '@/lib/date-utils'
 
+const DAY_VALID_THRESHOLD_PCT = 80
+
 interface WeeklyProgressProps {
   year: number
   month: number // 1-based
@@ -28,10 +30,21 @@ function getWeeks(year: number, month: number) {
 
 export default function WeeklyProgress({ year, month, completions, habits }: WeeklyProgressProps) {
   const completedByHabit = new Set(completions.map((c) => `${c.habit_id}|${c.date}`))
-  const completedDates = new Set(completions.map((c) => c.date))
   const monthStr = `${year}-${pad(month)}`
   const today = todayStr()
   const weeks = getWeeks(year, month)
+
+  const dayStats = (dateStr: string) => {
+    let filled = 0
+    // Every habit counts as possible on any past day — backfilling a day
+    // before a habit's creation date is allowed, so creation date doesn't
+    // exclude it here either.
+    const possible = habits.length
+    for (const h of habits) {
+      if (completedByHabit.has(`${h.id}|${dateStr}`)) filled++
+    }
+    return { filled, possible }
+  }
 
   return (
     <div className="mt-6 border-t border-cream-300 dark:border-cream-600 pt-4">
@@ -43,12 +56,9 @@ export default function WeeklyProgress({ year, month, completions, habits }: Wee
           for (const d of days) {
             const dateStr = `${monthStr}-${pad(d)}`
             if (dateStr > today) continue
-            for (const h of habits) {
-              const createdDate = h.created_at?.slice(0, 10)
-              if (createdDate && createdDate > dateStr) continue
-              possible++
-              if (completedByHabit.has(`${h.id}|${dateStr}`)) filled++
-            }
+            const stats = dayStats(dateStr)
+            filled += stats.filled
+            possible += stats.possible
           }
           const pct = possible > 0 ? Math.round((filled / possible) * 100) : 0
 
@@ -60,7 +70,9 @@ export default function WeeklyProgress({ year, month, completions, habits }: Wee
               <div className="flex gap-1.5">
                 {days.map((day) => {
                   const dateStr = `${monthStr}-${pad(day)}`
-                  const isFilled = completedDates.has(dateStr)
+                  const { filled: dayFilled, possible: dayPossible } = dayStats(dateStr)
+                  const dayPct = dayPossible > 0 ? (dayFilled / dayPossible) * 100 : 0
+                  const isFilled = dayPossible > 0 && dayPct >= DAY_VALID_THRESHOLD_PCT
                   return (
                     <div
                       key={day}
