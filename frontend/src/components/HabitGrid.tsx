@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { CaretLeft, CaretRight, WarningCircle } from '@phosphor-icons/react'
 import {
   DndContext,
@@ -49,26 +49,30 @@ export default function HabitGrid({ habits, year, month, completions, isError, o
   const daysElapsed = isCurrentMonth ? new Date().getDate() : daysInMonth
 
   // Local copy so a drag reorders instantly, without waiting on the
-  // habits-query refetch that follows the persist mutation.
+  // habits-query refetch that follows the persist mutation. Adjusted
+  // during render (React's recommended pattern for syncing state to a
+  // prop change) rather than in an effect, to avoid an extra render pass.
   const [orderedHabits, setOrderedHabits] = useState(habits)
-  useEffect(() => setOrderedHabits(habits), [habits])
+  const [prevHabits, setPrevHabits] = useState(habits)
+  if (habits !== prevHabits) {
+    setPrevHabits(habits)
+    setOrderedHabits(habits)
+  }
   const [reorderError, setReorderError] = useState<string | null>(null)
   const reorderMutation = useReorderHabits()
 
   const chunks = useMemo(() => weekChunks(monthStr, days), [monthStr, days])
+  // Same render-time-adjustment pattern: re-pick the default week only when
+  // the month itself changes, not on every chunk recompute (which would
+  // fight the user's manual nav).
   const [mobileWeekIndex, setMobileWeekIndex] = useState(0)
-  useEffect(() => {
-    if (isCurrentMonth) {
-      const todayDay = new Date().getDate()
-      const idx = chunks.findIndex((chunk) => chunk.includes(todayDay))
-      setMobileWeekIndex(idx === -1 ? 0 : idx)
-    } else {
-      setMobileWeekIndex(0)
-    }
-    // Only re-pick the default week when the month itself changes, not on
-    // every chunk recompute (which would fight the user's manual nav).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [monthStr])
+  const [prevMonthStr, setPrevMonthStr] = useState(monthStr)
+  if (monthStr !== prevMonthStr) {
+    setPrevMonthStr(monthStr)
+    const todayDay = new Date().getDate()
+    const idx = isCurrentMonth ? chunks.findIndex((chunk) => chunk.includes(todayDay)) : -1
+    setMobileWeekIndex(idx === -1 ? 0 : idx)
+  }
   const activeChunk = chunks[mobileWeekIndex] ?? days
   const mobileVisibleDays = useMemo(() => new Set(activeChunk), [activeChunk])
 
