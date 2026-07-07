@@ -3,7 +3,7 @@ import { renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import api from '@/lib/api'
-import { useHabits, useCreateHabit, useDeleteHabit } from '../useHabits'
+import { useHabits, useCreateHabit, useDeleteHabit, useReorderHabits } from '../useHabits'
 
 vi.mock('@/lib/api', () => ({
   default: {
@@ -67,5 +67,42 @@ describe('useHabits', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
     expect(api.delete).toHaveBeenCalledWith('/api/habits/1')
+  })
+})
+
+describe('useReorderHabits', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('PATCHes only habits whose order actually changed, as 1-based positions', async () => {
+    vi.mocked(api.patch).mockResolvedValue({ data: {} })
+    const habits = [
+      { id: 'a', order: 2 },
+      { id: 'b', order: 1 },
+      { id: 'c', order: 3 },
+    ] as never
+
+    const { result } = renderHook(() => useReorderHabits(), { wrapper: wrapper() })
+    result.current.mutate(habits)
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    // 'a' moves from order 2 -> 1, 'b' moves from order 1 -> 2, 'c' stays at 3
+    expect(api.patch).toHaveBeenCalledWith('/api/habits/a', { order: 1 })
+    expect(api.patch).toHaveBeenCalledWith('/api/habits/b', { order: 2 })
+    expect(api.patch).toHaveBeenCalledTimes(2)
+  })
+
+  it('does nothing when the order is already correct', async () => {
+    const habits = [
+      { id: 'a', order: 1 },
+      { id: 'b', order: 2 },
+    ] as never
+
+    const { result } = renderHook(() => useReorderHabits(), { wrapper: wrapper() })
+    result.current.mutate(habits)
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(api.patch).not.toHaveBeenCalled()
   })
 })

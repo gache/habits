@@ -33,14 +33,18 @@ export default function WeeklyProgress({ year, month, completions, habits }: Wee
   const monthStr = `${year}-${pad(month)}`
   const today = todayStr()
   const weeks = getWeeks(year, month)
+  // Only daily habits decompose into "one possible slot per day" — a weekly
+  // habit done once a week isn't meant to be checked every day, so it can't
+  // be scored on this per-day grid without misrepresenting it.
+  const dailyHabits = habits.filter((h) => h.frequency === 'daily')
 
   const dayStats = (dateStr: string) => {
     let filled = 0
     // Every habit counts as possible on any past day — backfilling a day
     // before a habit's creation date is allowed, so creation date doesn't
     // exclude it here either.
-    const possible = habits.length
-    for (const h of habits) {
+    const possible = dailyHabits.length
+    for (const h of dailyHabits) {
       if (completedByHabit.has(`${h.id}|${dateStr}`)) filled++
     }
     return { filled, possible }

@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useCreateHabit, useUpdateHabit, type Habit, type HabitCreate } from '@/hooks/useHabits'
-import { HABIT_PRESETS, EMOJI_OPTIONS } from '@/lib/habit-presets'
+import { HABIT_PRESETS, EMOJI_OPTIONS, FREQUENCY_LABELS } from '@/lib/habit-presets'
 
 interface AddHabitModalProps {
   onClose: () => void
   editing?: Habit | null
+  /** Called with a confirmation message right before onClose, once the save succeeds. */
+  onSaved?: (message: string) => void
 }
 
 const PRESET_COLORS = [
@@ -15,13 +17,8 @@ const PRESET_COLORS = [
 ]
 
 const FREQUENCIES = ['daily', 'weekly', 'monthly'] as const
-const FREQUENCY_LABELS: Record<(typeof FREQUENCIES)[number], string> = {
-  daily: 'Diaria',
-  weekly: 'Semanal',
-  monthly: 'Mensual',
-}
 
-export default function AddHabitModal({ onClose, editing }: AddHabitModalProps) {
+export default function AddHabitModal({ onClose, editing, onSaved }: AddHabitModalProps) {
   const createHabit = useCreateHabit()
   const updateHabit = useUpdateHabit()
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
@@ -87,8 +84,10 @@ export default function AddHabitModal({ onClose, editing }: AddHabitModalProps) 
     e.preventDefault()
     if (editing) {
       await updateHabit.mutateAsync({ id: editing.id, updates: form })
+      onSaved?.(`"${form.name}" actualizado`)
     } else {
       await createHabit.mutateAsync(form)
+      onSaved?.(`"${form.name}" agregado`)
     }
     onClose()
   }

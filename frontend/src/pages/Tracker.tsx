@@ -12,7 +12,8 @@ import WeeklyProgress from '@/components/WeeklyProgress'
 import MonthlyLog from '@/components/MonthlyLog'
 import AddHabitModal from '@/components/AddHabitModal'
 import BestStreaks from '@/components/BestStreaks'
-import { pad, getDaysInMonth, todayStr, habitDaysElapsed, isCompletionCountable } from '@/lib/date-utils'
+import Toast from '@/components/Toast'
+import { pad, getDaysInMonth, todayStr, habitDaysElapsed, habitPeriodsElapsed, countCompletedPeriods } from '@/lib/date-utils'
 import { getProgressColor } from '@/lib/progress-color'
 
 const DEMO = import.meta.env.VITE_DEMO_MODE === 'true'
@@ -24,6 +25,7 @@ export default function Tracker() {
   const [month, setMonth] = useState(now.getMonth() + 1)
   const [showAddModal, setShowAddModal] = useState(false)
   const [darkMode, setDarkMode] = useState(false)
+  const [savedMessage, setSavedMessage] = useState<string | null>(null)
 
   const toggleDark = (on: boolean) => {
     setDarkMode(on)
@@ -41,13 +43,12 @@ export default function Tracker() {
   const isCurrentMonth = monthStr === today.slice(0, 7)
   const daysElapsed = isCurrentMonth ? new Date().getDate() : getDaysInMonth(year, month)
   const totalPossible = habits.reduce(
-    (sum, h) => sum + habitDaysElapsed(h.created_at, monthStr, daysElapsed), 0,
+    (sum, h) => sum + habitPeriodsElapsed(h.frequency, habitDaysElapsed(h.created_at, monthStr, daysElapsed)), 0,
   )
-  const completedUpToToday = completions.filter((c) => {
-    const h = habits.find((h) => h.id === c.habit_id)
-    if (!h) return false
-    return isCompletionCountable(h.created_at, c.date, today)
-  }).length
+  const completedUpToToday = habits.reduce((sum, h) => {
+    const dates = new Set(completions.filter((c) => c.habit_id === h.id).map((c) => c.date))
+    return sum + countCompletedPeriods(h.frequency, dates, today)
+  }, 0)
   const globalPct = totalPossible > 0
     ? Math.min(100, Math.round((completedUpToToday / totalPossible) * 100))
     : null
@@ -189,7 +190,14 @@ export default function Tracker() {
           </p>
         </footer>
 
-        {showAddModal && <AddHabitModal onClose={() => setShowAddModal(false)} />}
+        {showAddModal && <AddHabitModal onClose={() => setShowAddModal(false)} onSaved={setSavedMessage} />}
+        {savedMessage && (
+          <Toast
+            message={savedMessage}
+            durationMs={3000}
+            onTimeout={() => setSavedMessage(null)}
+          />
+        )}
       </div>
     </div>
   )

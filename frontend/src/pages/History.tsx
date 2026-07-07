@@ -4,7 +4,7 @@ import { CaretLeft, CalendarBlank, Target, CheckCircle, TrendUp, Star, NotePenci
 import { useHabits, type Habit } from '@/hooks/useHabits'
 import { useCompletions, useCompletionsForMonths } from '@/hooks/useCompletions'
 import { useMonthlyLog } from '@/hooks/useMonthlyLog'
-import { getDaysInMonth, pad, todayStr, habitDaysElapsed, isCompletionCountable } from '@/lib/date-utils'
+import { getDaysInMonth, pad, todayStr, habitDaysElapsed, habitPeriodsElapsed, countCompletedPeriods } from '@/lib/date-utils'
 import { getProgressColor, getProgressBg } from '@/lib/progress-color'
 import BestStreaks from '@/components/BestStreaks'
 
@@ -47,12 +47,12 @@ function MonthCard({ year, month, habits, isSelected, onClick }: MonthCardProps)
   const isCurrentMonth = monthStr === today.slice(0, 7)
   const daysElapsed = isCurrentMonth ? parseInt(today.slice(8), 10) : getDaysInMonth(year, month)
   const totalPossible = habits.reduce(
-    (sum, h) => sum + habitDaysElapsed(h.created_at, monthStr, daysElapsed), 0,
+    (sum, h) => sum + habitPeriodsElapsed(h.frequency, habitDaysElapsed(h.created_at, monthStr, daysElapsed)), 0,
   )
-  const totalCompleted = completions.filter((c) => {
-    const h = habits.find((h) => h.id === c.habit_id)
-    return !!h && isCompletionCountable(h.created_at, c.date, today)
-  }).length
+  const totalCompleted = habits.reduce((sum, h) => {
+    const dates = new Set(completions.filter((c) => c.habit_id === h.id).map((c) => c.date))
+    return sum + countCompletedPeriods(h.frequency, dates, today)
+  }, 0)
   const pct = totalPossible > 0 ? Math.min(100, Math.round((totalCompleted / totalPossible) * 100)) : 0
 
   const color = getProgressColor(pct)
@@ -79,9 +79,10 @@ function MonthCard({ year, month, habits, isSelected, onClick }: MonthCardProps)
       {/* Mini bar per habit */}
       <div className="flex flex-col gap-1">
         {habits.map((h) => {
-          const done = completions.filter((c) => c.habit_id === h.id && isCompletionCountable(h.created_at, c.date, today)).length
-          const effectiveDays = habitDaysElapsed(h.created_at, monthStr, daysElapsed)
-          const hp = effectiveDays > 0 ? Math.min(100, Math.round((done / effectiveDays) * 100)) : 0
+          const dates = new Set(completions.filter((c) => c.habit_id === h.id).map((c) => c.date))
+          const done = countCompletedPeriods(h.frequency, dates, today)
+          const effectivePeriods = habitPeriodsElapsed(h.frequency, habitDaysElapsed(h.created_at, monthStr, daysElapsed))
+          const hp = effectivePeriods > 0 ? Math.min(100, Math.round((done / effectivePeriods) * 100)) : 0
           return (
             <div key={h.id} className="flex items-center gap-1.5">
               <span className="text-xs w-4 text-center">{h.icon}</span>
@@ -149,10 +150,11 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
             {habits.map((habit) => {
               const done = new Set(completions.filter((c) => c.habit_id === habit.id).map((c) => c.date))
               // Only count completions within the habit's actual lifetime, so
-              // pre-creation/future-dated seed data can't inflate the %.
-              const completedUpToToday = [...done].filter((d) => isCompletionCountable(habit.created_at, d, today)).length
-              const effectiveDays = habitDaysElapsed(habit.created_at, monthStr, daysElapsed)
-              const pct = effectiveDays > 0 ? Math.min(100, Math.round((completedUpToToday / effectiveDays) * 100)) : 0
+              // pre-creation/future-dated seed data can't inflate the % — and
+              // collapse same-week weekly checks into one fulfilled period.
+              const completedUpToToday = countCompletedPeriods(habit.frequency, done, today)
+              const effectivePeriods = habitPeriodsElapsed(habit.frequency, habitDaysElapsed(habit.created_at, monthStr, daysElapsed))
+              const pct = effectivePeriods > 0 ? Math.min(100, Math.round((completedUpToToday / effectivePeriods) * 100)) : 0
               return (
                 <tr key={habit.id} className="border-b border-cream-200 dark:border-cream-600">
                   <td className="py-1 px-2 sticky left-0 bg-cream-50 dark:bg-cream-800 z-10 min-w-[210px] max-w-[210px]">

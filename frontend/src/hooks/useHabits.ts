@@ -59,6 +59,22 @@ export function useUpdateHabit() {
   })
 }
 
+export function useReorderHabits() {
+  const qc = useQueryClient()
+  return useMutation<void, Error, Habit[]>({
+    mutationFn: async (orderedHabits) => {
+      const changed = orderedHabits
+        .map((habit, index) => ({ habit, order: index + 1 }))
+        .filter(({ habit, order }) => habit.order !== order)
+      await Promise.all(
+        changed.map(({ habit, order }) => api.patch(`/api/habits/${habit.id}`, { order })),
+      )
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['habits'] }),
+    onError: () => qc.invalidateQueries({ queryKey: ['habits'] }),
+  })
+}
+
 export function useDeleteHabit() {
   const qc = useQueryClient()
   return useMutation<void, Error, string>({

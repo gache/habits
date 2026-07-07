@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
-import { PencilSimple, Archive, Trash } from '@phosphor-icons/react'
+import { PencilSimple, Archive, Trash, DotsSixVertical } from '@phosphor-icons/react'
+import { useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { type Habit, useDeleteHabit, useUpdateHabit } from '@/hooks/useHabits'
 import { type Completion } from '@/hooks/useCompletions'
 import DayCell from './DayCell'
@@ -7,8 +9,9 @@ import AddHabitModal from './AddHabitModal'
 import ConfirmDialog from './ConfirmDialog'
 import StreakCelebration from './StreakCelebration'
 import Toast from './Toast'
-import { pad, calcStreak, calcBestStreak, habitDaysElapsed, isCompletionCountable } from '@/lib/date-utils'
+import { pad, calcStreak, calcBestStreak, habitDaysElapsed, habitPeriodsElapsed, countCompletedPeriods, isPeriodLocked, isWeekday } from '@/lib/date-utils'
 import { getStreakLevel, type StreakLevel } from '@/lib/streak-levels'
+import { FREQUENCY_LABELS, FREQUENCY_BADGE_STYLES } from '@/lib/habit-presets'
 
 const celebratedKey = (habitId: string) => `habit-streak-celebrated:${habitId}`
 const lastStreakKey = (habitId: string) => `habit-streak-last:${habitId}`
@@ -21,16 +24,20 @@ interface HabitRowProps {
   totalDays: number   // days elapsed (for progress bar)
   completions: Completion[]
   showStreak?: boolean
+  /** Day-of-month numbers visible below the `sm` breakpoint (current mobile week). */
+  mobileVisibleDays: Set<number>
   onToggle: (habitId: string, date: string, isCompleted: boolean) => void
 }
 
-export default function HabitRow({ habit, days, monthStr, today, totalDays, completions, showStreak = true, onToggle }: HabitRowProps) {
+export default function HabitRow({ habit, days, monthStr, today, totalDays, completions, showStreak = true, mobileVisibleDays, onToggle }: HabitRowProps) {
   const [editing, setEditing] = useState(false)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [celebrating, setCelebrating] = useState<{ level: StreakLevel; streak: number } | null>(null)
+  const [savedMessage, setSavedMessage] = useState<string | null>(null)
   const deleteHabit = useDeleteHabit()
   const updateHabit = useUpdateHabit()
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: habit.id })
 
   const completedDates = new Set(
     completions.filter((c) => c.habit_id === habit.id).map((c) => c.date),
@@ -69,11 +76,9 @@ export default function HabitRow({ habit, days, monthStr, today, totalDays, comp
     }
   }, [habit.id, bestStreak, showStreak])
 
-  const completedUpToToday = completions.filter(
-    (c) => c.habit_id === habit.id && isCompletionCountable(habit.created_at, c.date, today),
-  ).length
-  const effectiveDays = habitDaysElapsed(habit.created_at, monthStr, totalDays)
-  const progressPct = effectiveDays > 0 ? Math.min(100, Math.round((completedUpToToday / effectiveDays) * 100)) : 0
+  const completedUpToToday = countCompletedPeriods(habit.frequency, completedDates, today)
+  const effectivePeriods = habitPeriodsElapsed(habit.frequency, habitDaysElapsed(habit.created_at, monthStr, totalDays))
+  const progressPct = effectivePeriods > 0 ? Math.min(100, Math.round((completedUpToToday / effectivePeriods) * 100)) : 0
 
   const handleDelete = () => {
     setConfirmingDelete(false)
@@ -97,37 +102,58 @@ export default function HabitRow({ habit, days, monthStr, today, totalDays, comp
 
   return (
     <>
-      <tr className="border-b border-cream-200 dark:border-cream-600 group hover:bg-cream-100/50 dark:hover:bg-cream-700/50 transition-colors">
+      <tr
+        ref={setNodeRef}
+        style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 }}
+        className="border-b border-cream-200 dark:border-cream-600 group hover:bg-cream-100/50 dark:hover:bg-cream-700/50 transition-colors"
+      >
         {/* Habit info cell */}
-        <td className="py-1.5 pr-2 sticky left-0 bg-cream-50 dark:bg-cream-800 z-10 min-w-[172px] max-w-[172px]">
+        <td className="py-1.5 pr-2 sticky left-0 bg-cream-50 dark:bg-cream-800 z-10 min-w-[140px] max-w-[140px] sm:min-w-[172px] sm:max-w-[172px]">
           <div className="flex items-start gap-1.5">
+            <button
+              {...attributes}
+              {...listeners}
+              className="touch-none cursor-grab active:cursor-grabbing text-cream-400 hover:text-cream-600 dark:text-cream-600 dark:hover:text-cream-300 shrink-0 mt-0.5 focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1 rounded"
+              aria-label={`Reordenar ${habit.name}`}
+            >
+              <DotsSixVertical size={14} weight="bold" />
+            </button>
             {/* Color accent bar */}
             <div
               className="w-1 self-stretch rounded-full shrink-0"
               style={{ backgroundColor: habit.color }}
             />
-            <div className="overflow-hidden flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-1">
+            <div className="overflow-hidden flex-1 min-w-0 flex flex-col gap-0.5">
+              <span
+                title={habit.name}
+                className="font-sans font-bold text-sm text-cream-800 dark:text-cream-100 leading-tight [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] overflow-hidden"
+              >
+                {habit.icon} {habit.name}
+              </span>
+              {showStreak && streak > 0 && (
                 <span
-                  title={habit.name}
-                  className="font-sans font-bold text-xs text-cream-800 dark:text-cream-100 leading-tight [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] overflow-hidden"
+                  className="flex items-center gap-1 text-xs leading-tight truncate"
+                  style={{ color: streakLevel?.color ?? undefined }}
+                  title={`Racha de ${streak} día${streak === 1 ? '' : 's'}`}
                 >
-                  {habit.icon} {habit.name}
+                  🔥 Racha: {streak} día{streak === 1 ? '' : 's'}
                 </span>
-                {streakLevel && (
-                  <span
-                    className="flex items-center gap-0.5 text-xs font-bold shrink-0 mt-0.5"
-                    style={{ color: streakLevel.color }}
-                    title={`Racha de ${streak} días — ${streakLevel.label}`}
-                    aria-label={`Racha de ${streak} días, ${streakLevel.label}`}
-                  >
-                    <streakLevel.icon size={11} weight="fill" />
-                    {streak}
-                  </span>
-                )}
-              </div>
+              )}
+              <span
+                className={[
+                  'inline-flex items-center gap-1 self-start px-1.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide',
+                  FREQUENCY_BADGE_STYLES[habit.frequency],
+                ].join(' ')}
+              >
+                📅 {FREQUENCY_LABELS[habit.frequency]}
+              </span>
               {habit.description && (
-                <div className="font-sans text-xs text-cream-500 dark:text-cream-400 truncate">{habit.description}</div>
+                <span
+                  title={habit.description}
+                  className="flex items-center gap-1 text-xs leading-tight text-cream-500 dark:text-cream-400 truncate"
+                >
+                  ⏱ {habit.description}
+                </span>
               )}
             </div>
             {/* Edit / Archive / Delete buttons — visible on hover */}
@@ -165,21 +191,27 @@ export default function HabitRow({ habit, days, monthStr, today, totalDays, comp
           const dateStr = `${monthStr}-${pad(day)}`
           const completed = completedDates.has(dateStr)
           const isFutureUncompleted = dateStr > today && !completed
+          const isWeekendOnWeekly = !completed && habit.frequency === 'weekly' && !isWeekday(dateStr)
+          const periodLocked = !isFutureUncompleted && !isWeekendOnWeekly && isPeriodLocked(habit.frequency, dateStr, completedDates)
+          const isDisabled = isFutureUncompleted || isWeekendOnWeekly || periodLocked
+          const disabledReason = isFutureUncompleted ? 'future' : isWeekendOnWeekly ? 'weekend' : 'period-locked'
           return (
             <DayCell
               key={day}
               completed={completed}
               color={habit.color}
               isToday={dateStr === today}
-              disabled={isFutureUncompleted}
+              disabled={isDisabled}
+              disabledReason={disabledReason}
               dateLabel={dateStr}
-              onClick={() => { if (!isFutureUncompleted) onToggle(habit.id, dateStr, completed) }}
+              hiddenOnMobile={!mobileVisibleDays.has(day)}
+              onClick={() => { if (!isDisabled) onToggle(habit.id, dateStr, completed) }}
             />
           )
         })}
 
         {/* Progress bar + total */}
-        <td className="pl-1.5 w-12">
+        <td className="pl-1.5 w-10 sm:w-12">
           <div className="flex flex-col items-center gap-0.5">
             <span className="font-sans font-bold text-xs text-cream-700 dark:text-cream-200">{total}</span>
             <div className="w-9 h-1.5 rounded-full bg-cream-200 dark:bg-cream-600 overflow-hidden">
@@ -193,7 +225,14 @@ export default function HabitRow({ habit, days, monthStr, today, totalDays, comp
         </td>
       </tr>
 
-      {editing && <AddHabitModal editing={habit} onClose={() => setEditing(false)} />}
+      {editing && <AddHabitModal editing={habit} onClose={() => setEditing(false)} onSaved={setSavedMessage} />}
+      {savedMessage && (
+        <Toast
+          message={savedMessage}
+          durationMs={3000}
+          onTimeout={() => setSavedMessage(null)}
+        />
+      )}
       {confirmingDelete && (
         <ConfirmDialog
           title="Eliminar hábito"
