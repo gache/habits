@@ -10,8 +10,8 @@ bearer_scheme = HTTPBearer()
 def get_current_uid(
     creds: HTTPAuthorizationCredentials = Depends(bearer_scheme),
 ) -> str:
-    get_firebase_app()
     try:
+        get_firebase_app()
         decoded = auth.verify_id_token(creds.credentials)
         return decoded["uid"]
     except Exception:
