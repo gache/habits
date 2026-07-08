@@ -7,7 +7,12 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // 'prompt' (not autoUpdate): a new SW installs in the background but
+      // waits for user confirmation before activating — otherwise users on
+      // an already-open tab silently keep running stale JS with no way to
+      // know a fix landed (this bit us mid-session: a real fix looked
+      // "still broken" purely because of cache staleness).
+      registerType: 'prompt',
       includeAssets: ['favicon.png', 'apple-touch-icon.png'],
       manifest: {
         name: 'Seguimiento de Hábitos',

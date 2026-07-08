@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { onAuthStateChanged, type User } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
+import UpdatePrompt from '@/components/UpdatePrompt'
 
 const Login = lazy(() => import('@/pages/Login'))
 const Tracker = lazy(() => import('@/pages/Tracker'))
@@ -29,7 +30,12 @@ export default function App() {
   }, [])
 
   if (user === undefined) {
-    return <PageLoading />
+    return (
+      <>
+        <PageLoading />
+        <UpdatePrompt />
+      </>
+    )
   }
 
   return (
@@ -49,6 +55,7 @@ export default function App() {
           )}
         </Routes>
       </Suspense>
+      <UpdatePrompt />
     </BrowserRouter>
   )
 }
