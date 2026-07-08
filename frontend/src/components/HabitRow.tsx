@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { PencilSimple, Archive, Trash, DotsSixVertical } from '@phosphor-icons/react'
+import { PencilSimple, Archive, Trash, DotsSixVertical, DotsThreeVertical } from '@phosphor-icons/react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { type Habit, useDeleteHabit, useUpdateHabit } from '@/hooks/useHabits'
@@ -35,6 +35,7 @@ export default function HabitRow({ habit, days, monthStr, today, totalDays, comp
   const [deleting, setDeleting] = useState(false)
   const [celebrating, setCelebrating] = useState<{ level: StreakLevel; streak: number } | null>(null)
   const [savedMessage, setSavedMessage] = useState<string | null>(null)
+  const [showMobileMenu, setShowMobileMenu] = useState(false)
   const deleteHabit = useDeleteHabit()
   const updateHabit = useUpdateHabit()
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: habit.id })
@@ -108,7 +109,7 @@ export default function HabitRow({ habit, days, monthStr, today, totalDays, comp
         className="border-b border-cream-200 dark:border-cream-600 group hover:bg-cream-100/50 dark:hover:bg-cream-700/50 transition-colors"
       >
         {/* Habit info cell */}
-        <td className="py-1.5 pr-2 sticky left-0 bg-cream-50 dark:bg-cream-800 z-10 min-w-[140px] max-w-[140px] sm:min-w-[172px] sm:max-w-[172px]">
+        <td className="py-1.5 pr-2 sticky left-0 bg-cream-50 dark:bg-cream-800 z-10 min-w-[108px] max-w-[108px] sm:min-w-[172px] sm:max-w-[172px]">
           <div className="flex items-start gap-1.5">
             <button
               {...attributes}
@@ -156,8 +157,10 @@ export default function HabitRow({ habit, days, monthStr, today, totalDays, comp
                 </span>
               )}
             </div>
-            {/* Edit / Archive / Delete buttons — visible on hover */}
-            <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+            {/* Edit / Archive / Delete buttons — visible on hover (desktop only;
+                on mobile there's no hover, so they'd otherwise sit invisible
+                yet still eat ~60-90px of the already-narrow column). */}
+            <div className="hidden sm:flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
               <button
                 onClick={() => setEditing(true)}
                 className="p-0.5 rounded text-cream-600 dark:text-cream-400 hover:text-cream-700 dark:hover:text-cream-200 hover:bg-cream-200 dark:hover:bg-cream-700 transition-colors focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1"
@@ -182,6 +185,43 @@ export default function HabitRow({ habit, days, monthStr, today, totalDays, comp
               >
                 <Trash size={14} />
               </button>
+            </div>
+
+            {/* Mobile: single compact trigger instead of 3 always-laid-out icons */}
+            <div className="relative shrink-0 sm:hidden">
+              <button
+                onClick={() => setShowMobileMenu((v) => !v)}
+                className="p-1 -m-1 rounded text-cream-500 dark:text-cream-400 hover:bg-cream-200 dark:hover:bg-cream-700 focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1"
+                aria-label={`Más acciones para ${habit.name}`}
+                aria-expanded={showMobileMenu}
+              >
+                <DotsThreeVertical size={16} weight="bold" />
+              </button>
+              {showMobileMenu && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setShowMobileMenu(false)} />
+                  <div className="absolute right-0 top-full mt-1 z-20 bg-cream-50 dark:bg-cream-800 border border-cream-200 dark:border-cream-600 rounded-lg shadow-lg py-1 w-36">
+                    <button
+                      onClick={() => { setEditing(true); setShowMobileMenu(false) }}
+                      className="flex items-center gap-2 w-full px-3 py-2 text-xs text-cream-700 dark:text-cream-200 hover:bg-cream-100 dark:hover:bg-cream-700"
+                    >
+                      <PencilSimple size={14} /> Editar
+                    </button>
+                    <button
+                      onClick={() => { handleArchive(); setShowMobileMenu(false) }}
+                      className="flex items-center gap-2 w-full px-3 py-2 text-xs text-cream-700 dark:text-cream-200 hover:bg-amber-50 dark:hover:bg-amber-950/30"
+                    >
+                      <Archive size={14} /> Archivar
+                    </button>
+                    <button
+                      onClick={() => { setConfirmingDelete(true); setShowMobileMenu(false) }}
+                      className="flex items-center gap-2 w-full px-3 py-2 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                    >
+                      <Trash size={14} /> Eliminar
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </td>
@@ -211,7 +251,7 @@ export default function HabitRow({ habit, days, monthStr, today, totalDays, comp
         })}
 
         {/* Progress bar + total */}
-        <td className="pl-1.5 w-10 sm:w-12">
+        <td className="pl-1.5 w-9 sm:w-12">
           <div className="flex flex-col items-center gap-0.5">
             <span className="font-sans font-bold text-xs text-cream-700 dark:text-cream-200">{total}</span>
             <div className="w-9 h-1.5 rounded-full bg-cream-200 dark:bg-cream-600 overflow-hidden">

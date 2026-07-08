@@ -119,7 +119,7 @@ export default function HabitGrid({ habits, year, month, completions, isError, o
         <table className="text-xs w-full" style={{ borderCollapse: 'separate', borderSpacing: '0px 2px' }}>
           <thead>
             <tr className="bg-cream-100 dark:bg-cream-700">
-              <th className="py-2 px-2 text-left font-bold text-cream-700 dark:text-cream-200 sticky left-0 bg-cream-100 dark:bg-cream-700 z-10 min-w-[140px] max-w-[140px] sm:min-w-[172px] sm:max-w-[172px] rounded-sm">
+              <th className="py-2 px-2 text-left font-bold text-cream-700 dark:text-cream-200 sticky left-0 bg-cream-100 dark:bg-cream-700 z-10 min-w-[108px] max-w-[108px] sm:min-w-[172px] sm:max-w-[172px] rounded-sm">
                 HÁBITO
               </th>
               {days.map((d) => {
@@ -139,7 +139,7 @@ export default function HabitGrid({ habits, year, month, completions, isError, o
                   </th>
                 )
               })}
-              <th className="px-1.5 text-center font-bold text-cream-700 dark:text-cream-200 w-10 sm:w-12 rounded-sm">TOTAL</th>
+              <th className="px-1.5 text-center font-bold text-cream-700 dark:text-cream-200 w-9 sm:w-12 rounded-sm">TOTAL</th>
             </tr>
           </thead>
           <SortableContext items={orderedHabits.map((h) => h.id)} strategy={verticalListSortingStrategy}>
