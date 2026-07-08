@@ -52,7 +52,7 @@ export default function WeeklyProgress({ year, month, completions, habits }: Wee
 
   return (
     <div className="mt-6 border-t border-cream-300 dark:border-cream-600 pt-4">
-      <h3 className="font-handwritten text-cream-600 dark:text-cream-400 text-base mb-3 tracking-wide">PROGRESO SEMANAL</h3>
+      <h3 className="font-handwritten text-cream-600 dark:text-cream-400 text-lg mb-3 tracking-wide">PROGRESO SEMANAL</h3>
       <div className="flex flex-col gap-2">
         {weeks.map(({ label, days }) => {
           let filled = 0
@@ -68,10 +68,10 @@ export default function WeeklyProgress({ year, month, completions, habits }: Wee
 
           return (
             <div key={label} className="flex items-center gap-3">
-              <span className="font-sans text-xs text-cream-600 dark:text-cream-400 w-28 shrink-0">
+              <span className="font-sans text-sm text-cream-600 dark:text-cream-400 w-32 shrink-0">
                 {label} ({days[0]}–{days[days.length - 1]})
               </span>
-              <div className="flex gap-1.5">
+              <div className="flex gap-1">
                 {days.map((day) => {
                   const dateStr = `${monthStr}-${pad(day)}`
                   const { filled: dayFilled, possible: dayPossible } = dayStats(dateStr)
@@ -80,7 +80,7 @@ export default function WeeklyProgress({ year, month, completions, habits }: Wee
                   return (
                     <div
                       key={day}
-                      className="w-5 h-5 rounded-full border border-cream-300 dark:border-cream-600 transition-colors"
+                      className="w-4 h-4 rounded-full border border-cream-300 dark:border-cream-600 transition-colors"
                       style={{ backgroundColor: isFilled ? '#457040' : 'transparent' }}
                       title={dateStr}
                     />
@@ -88,8 +88,8 @@ export default function WeeklyProgress({ year, month, completions, habits }: Wee
                 })}
               </div>
               <span className={[
-                'font-sans font-bold text-xs ml-1',
-                pct >= 80 ? 'text-green-600' : pct >= 50 ? 'text-amber-600' : 'text-cream-400',
+                'font-sans font-bold text-sm ml-1',
+                pct >= 80 ? 'text-green-600' : pct >= 50 ? 'text-amber-600' : 'text-cream-600 dark:text-cream-400',
               ].join(' ')}>
                 {String(pct).padStart(2, '0')}%
               </span>

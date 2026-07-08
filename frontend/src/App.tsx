@@ -13,7 +13,7 @@ const DEMO_USER = { uid: 'demo-user', email: 'demo@example.com' } as User
 function PageLoading() {
   return (
     <div className="min-h-screen bg-cream-100 flex items-center justify-center">
-      <p className="font-handwritten text-cream-400 text-xl">Cargando...</p>
+      <p className="font-handwritten text-cream-600 text-2xl">Cargando...</p>
     </div>
   )
 }

@@ -21,26 +21,26 @@ const DISABLED_TITLE = {
 export default function DayCell({ completed, color, isToday, disabled, disabledReason = 'future', dateLabel, hiddenOnMobile, onClick }: DayCellProps) {
   return (
     <td className={['p-0 text-center align-middle', hiddenOnMobile ? 'hidden sm:table-cell' : ''].join(' ').trim()}>
-      {/* Button is a larger tap target (32px, 28px below `sm`) than the
-          visual swatch inside it (20px), so the dense month grid stays
-          compact. 31 same-row day columns with 1px gaps make a full 44px
-          WCAG 2.5.5 target impossible without collapsing into neighboring
-          cells — 32px is the practical ceiling here; see MonthNav/header
-          controls for full 44px targets. */}
+      {/* Button is a larger tap target than the visual swatch inside it, so
+          the grid stays visually compact. Desktop (`sm`+) shows all ~31 days
+          of the month in one row, where 1px gaps make a full 44px WCAG 2.5.5
+          target impossible without collapsing into neighboring cells — 32px
+          is the practical ceiling there. Mobile only ever shows 5 days at a
+          time (see dayChunks), which leaves room for a proper 40px target. */}
       <button
         onClick={onClick}
         disabled={disabled}
         aria-label={`${dateLabel}, ${completed ? 'completado' : 'no completado'}${disabled ? `, ${DISABLED_TITLE[disabledReason]}` : ''}`}
         title={disabled ? DISABLED_TITLE[disabledReason] : completed ? 'Marcar como no hecho' : 'Marcar como hecho'}
         className={[
-          'w-7 h-7 sm:w-8 sm:h-8 mx-auto flex items-center justify-center transition-all',
-          disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer',
+          'w-10 h-10 sm:w-[30px] sm:h-[30px] mx-auto flex items-center justify-center transition-all',
+          disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer active:scale-90',
           'focus:outline-none focus-visible:ring-2 focus-visible:ring-cream-600 focus-visible:ring-offset-1',
         ].join(' ')}
       >
         <span
           className={[
-            'w-5 h-5 rounded-full border-2 transition-all duration-200 flex items-center justify-center shadow-sm',
+            'w-6 h-6 sm:w-5 sm:h-5 rounded-full border-2 transition-all duration-200 flex items-center justify-center shadow-sm',
             disabled ? '' : 'hover:scale-110',
             completed ? 'day-pop shadow-md' : '',
             isToday && !completed ? 'ring-2 ring-cream-500 ring-offset-1' : '',

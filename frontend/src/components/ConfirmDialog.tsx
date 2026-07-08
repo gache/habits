@@ -54,16 +54,16 @@ export default function ConfirmDialog({
             ? <WarningCircle size={26} weight="fill" className="text-red-600 dark:text-red-400" />
             : <Question size={26} weight="fill" className="text-terracotta-600 dark:text-terracotta-400" />}
         </div>
-        <h2 id="confirm-dialog-title" className="font-sans font-extrabold text-lg text-cream-800 dark:text-cream-100 mb-1.5">
+        <h2 id="confirm-dialog-title" className="font-sans font-extrabold text-xl text-cream-800 dark:text-cream-100 mb-1.5">
           {title}
         </h2>
-        <p id="confirm-dialog-message" className="font-sans text-sm text-cream-600 dark:text-cream-300 leading-relaxed mb-6">
+        <p id="confirm-dialog-message" className="font-sans text-base text-cream-600 dark:text-cream-300 leading-relaxed mb-6">
           {message}
         </p>
         <div className="flex justify-center gap-2">
           <button
             onClick={onCancel}
-            className="px-5 py-2 rounded-full text-sm font-bold text-cream-600 dark:text-cream-300 border border-cream-300 dark:border-cream-600 hover:bg-cream-200 dark:hover:bg-cream-700 transition-colors focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1"
+            className="px-5 py-2 rounded-full text-base font-bold text-cream-600 dark:text-cream-300 border border-cream-300 dark:border-cream-600 hover:bg-cream-200 dark:hover:bg-cream-700 transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1"
           >
             {cancelLabel}
           </button>
@@ -71,7 +71,7 @@ export default function ConfirmDialog({
             ref={confirmRef}
             onClick={onConfirm}
             className={[
-              'px-5 py-2 rounded-full text-sm font-bold text-cream-50 shadow-xs transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1',
+              'px-5 py-2 rounded-full text-base font-bold text-cream-50 shadow-xs transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-1',
               danger ? 'bg-red-600 hover:bg-red-700 focus:ring-red-400' : 'bg-terracotta-600 hover:bg-terracotta-700 focus:ring-terracotta-400',
             ].join(' ')}
           >

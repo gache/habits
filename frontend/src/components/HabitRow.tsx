@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { PencilSimple, Archive, Trash, DotsSixVertical, DotsThreeVertical } from '@phosphor-icons/react'
+import { PencilSimple, Archive, Trash, DotsSixVertical, DotsThreeVertical, CalendarBlank } from '@phosphor-icons/react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { type Habit, useDeleteHabit, useUpdateHabit } from '@/hooks/useHabits'
@@ -109,15 +109,15 @@ export default function HabitRow({ habit, days, monthStr, today, totalDays, comp
         className="border-b border-cream-200 dark:border-cream-600 group hover:bg-cream-100/50 dark:hover:bg-cream-700/50 transition-colors"
       >
         {/* Habit info cell */}
-        <td className="py-1.5 pr-2 sticky left-0 bg-cream-50 dark:bg-cream-800 z-10 min-w-[108px] max-w-[108px] sm:min-w-[172px] sm:max-w-[172px]">
-          <div className="flex items-start gap-1.5">
+        <td className="relative py-1.5 pr-2 sticky left-0 bg-cream-50 dark:bg-cream-800 z-10 w-[140px] sm:w-[190px]">
+          <div className="flex items-start gap-1">
             <button
               {...attributes}
               {...listeners}
-              className="touch-none cursor-grab active:cursor-grabbing text-cream-400 hover:text-cream-600 dark:text-cream-600 dark:hover:text-cream-300 shrink-0 mt-0.5 focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1 rounded"
+              className="touch-none cursor-grab active:cursor-grabbing text-cream-500 hover:text-cream-600 dark:text-cream-500 dark:hover:text-cream-300 shrink-0 mt-0.5 focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1 rounded"
               aria-label={`Reordenar ${habit.name}`}
             >
-              <DotsSixVertical size={14} weight="bold" />
+              <DotsSixVertical size={12} weight="bold" />
             </button>
             {/* Color accent bar */}
             <div
@@ -127,13 +127,13 @@ export default function HabitRow({ habit, days, monthStr, today, totalDays, comp
             <div className="overflow-hidden flex-1 min-w-0 flex flex-col gap-0.5">
               <span
                 title={habit.name}
-                className="font-sans font-bold text-sm text-cream-800 dark:text-cream-100 leading-tight [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] overflow-hidden"
+                className="font-sans font-bold text-base text-cream-800 dark:text-cream-100 leading-tight [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] overflow-hidden"
               >
                 {habit.icon} {habit.name}
               </span>
               {showStreak && streak > 0 && (
                 <span
-                  className="flex items-center gap-1 text-xs leading-tight truncate"
+                  className="flex items-center gap-1 text-sm leading-tight truncate"
                   style={{ color: streakLevel?.color ?? undefined }}
                   title={`Racha de ${streak} día${streak === 1 ? '' : 's'}`}
                 >
@@ -142,60 +142,30 @@ export default function HabitRow({ habit, days, monthStr, today, totalDays, comp
               )}
               <span
                 className={[
-                  'inline-flex items-center gap-1 self-start px-1.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide',
+                  'inline-flex items-center gap-1 self-start px-1.5 py-0.5 rounded-full text-sm font-bold uppercase tracking-wide whitespace-nowrap',
                   FREQUENCY_BADGE_STYLES[habit.frequency],
                 ].join(' ')}
               >
-                📅 {FREQUENCY_LABELS[habit.frequency]}
+                <CalendarBlank size={11} weight="bold" aria-hidden="true" /> {FREQUENCY_LABELS[habit.frequency]}
               </span>
               {habit.description && (
                 <span
                   title={habit.description}
-                  className="flex items-center gap-1 text-xs leading-tight text-cream-500 dark:text-cream-400 truncate"
+                  className="flex items-center gap-1 text-sm leading-tight text-cream-700 dark:text-cream-400 truncate"
                 >
                   ⏱ {habit.description}
                 </span>
               )}
             </div>
-            {/* Edit / Archive / Delete buttons — visible on hover (desktop only;
-                on mobile there's no hover, so they'd otherwise sit invisible
-                yet still eat ~60-90px of the already-narrow column). */}
-            <div className="hidden sm:flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-              <button
-                onClick={() => setEditing(true)}
-                className="p-0.5 rounded text-cream-600 dark:text-cream-400 hover:text-cream-700 dark:hover:text-cream-200 hover:bg-cream-200 dark:hover:bg-cream-700 transition-colors focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1"
-                title="Editar hábito"
-                aria-label={`Editar ${habit.name}`}
-              >
-                <PencilSimple size={14} />
-              </button>
-              <button
-                onClick={handleArchive}
-                className="p-0.5 rounded text-cream-600 dark:text-cream-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-1"
-                title="Archivar hábito (ocultar sin eliminar)"
-                aria-label={`Archivar ${habit.name}`}
-              >
-                <Archive size={14} />
-              </button>
-              <button
-                onClick={() => setConfirmingDelete(true)}
-                className="p-0.5 rounded text-cream-600 dark:text-cream-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-1"
-                title="Eliminar hábito permanentemente"
-                aria-label={`Eliminar ${habit.name}`}
-              >
-                <Trash size={14} />
-              </button>
-            </div>
-
             {/* Mobile: single compact trigger instead of 3 always-laid-out icons */}
             <div className="relative shrink-0 sm:hidden">
               <button
                 onClick={() => setShowMobileMenu((v) => !v)}
-                className="p-1 -m-1 rounded text-cream-500 dark:text-cream-400 hover:bg-cream-200 dark:hover:bg-cream-700 focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1"
+                className="p-0.5 -m-0.5 rounded text-cream-500 dark:text-cream-400 hover:bg-cream-200 dark:hover:bg-cream-700 transition-all active:scale-90 focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1"
                 aria-label={`Más acciones para ${habit.name}`}
                 aria-expanded={showMobileMenu}
               >
-                <DotsThreeVertical size={16} weight="bold" />
+                <DotsThreeVertical size={14} weight="bold" />
               </button>
               {showMobileMenu && (
                 <>
@@ -203,19 +173,19 @@ export default function HabitRow({ habit, days, monthStr, today, totalDays, comp
                   <div className="absolute right-0 top-full mt-1 z-20 bg-cream-50 dark:bg-cream-800 border border-cream-200 dark:border-cream-600 rounded-lg shadow-lg py-1 w-36">
                     <button
                       onClick={() => { setEditing(true); setShowMobileMenu(false) }}
-                      className="flex items-center gap-2 w-full px-3 py-2 text-xs text-cream-700 dark:text-cream-200 hover:bg-cream-100 dark:hover:bg-cream-700"
+                      className="flex items-center gap-2 w-full px-3 py-2 text-sm text-cream-700 dark:text-cream-200 hover:bg-cream-100 dark:hover:bg-cream-700"
                     >
                       <PencilSimple size={14} /> Editar
                     </button>
                     <button
                       onClick={() => { handleArchive(); setShowMobileMenu(false) }}
-                      className="flex items-center gap-2 w-full px-3 py-2 text-xs text-cream-700 dark:text-cream-200 hover:bg-amber-50 dark:hover:bg-amber-950/30"
+                      className="flex items-center gap-2 w-full px-3 py-2 text-sm text-cream-700 dark:text-cream-200 hover:bg-amber-50 dark:hover:bg-amber-950/30"
                     >
                       <Archive size={14} /> Archivar
                     </button>
                     <button
                       onClick={() => { setConfirmingDelete(true); setShowMobileMenu(false) }}
-                      className="flex items-center gap-2 w-full px-3 py-2 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                      className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
                     >
                       <Trash size={14} /> Eliminar
                     </button>
@@ -223,6 +193,36 @@ export default function HabitRow({ habit, days, monthStr, today, totalDays, comp
                 </>
               )}
             </div>
+          </div>
+          {/* Edit / Archive / Delete — desktop hover overlay, positioned
+              absolutely so it doesn't reserve flex width (it used to sit
+              inline-but-invisible at rest, permanently stealing the space
+              the badge/name text needed to stay on one line). */}
+          <div className="hidden sm:flex absolute top-1 right-1 gap-0.5 bg-cream-50 dark:bg-cream-800 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              onClick={() => setEditing(true)}
+              className="p-0.5 rounded text-cream-600 dark:text-cream-400 hover:text-cream-700 dark:hover:text-cream-200 hover:bg-cream-200 dark:hover:bg-cream-700 transition-all active:scale-90 focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1"
+              title="Editar hábito"
+              aria-label={`Editar ${habit.name}`}
+            >
+              <PencilSimple size={14} />
+            </button>
+            <button
+              onClick={handleArchive}
+              className="p-0.5 rounded text-cream-600 dark:text-cream-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/30 transition-all active:scale-90 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-1"
+              title="Archivar hábito (ocultar sin eliminar)"
+              aria-label={`Archivar ${habit.name}`}
+            >
+              <Archive size={14} />
+            </button>
+            <button
+              onClick={() => setConfirmingDelete(true)}
+              className="p-0.5 rounded text-cream-600 dark:text-cream-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all active:scale-90 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-1"
+              title="Eliminar hábito permanentemente"
+              aria-label={`Eliminar ${habit.name}`}
+            >
+              <Trash size={14} />
+            </button>
           </div>
         </td>
 
@@ -253,8 +253,8 @@ export default function HabitRow({ habit, days, monthStr, today, totalDays, comp
         {/* Progress bar + total */}
         <td className="pl-1.5 w-9 sm:w-12">
           <div className="flex flex-col items-center gap-0.5">
-            <span className="font-sans font-bold text-xs text-cream-700 dark:text-cream-200">{total}</span>
-            <div className="w-9 h-1.5 rounded-full bg-cream-200 dark:bg-cream-600 overflow-hidden">
+            <span className="font-sans font-bold text-sm text-cream-700 dark:text-cream-200">{total}</span>
+            <div className="w-5 h-1.5 rounded-full bg-cream-200 dark:bg-cream-600 overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-300"
                 style={{ width: `${progressPct}%`, backgroundColor: habit.color }}

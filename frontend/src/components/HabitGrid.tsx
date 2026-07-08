@@ -47,7 +47,9 @@ export default function HabitGrid({ habits, year, month, completions, isError, o
   const [reorderError, setReorderError] = useState<string | null>(null)
   const reorderMutation = useReorderHabits()
 
-  const chunks = useMemo(() => dayChunks(days), [days])
+  // 4 (not 5) on mobile: the larger post-font-bump touch targets (40px) and
+  // full habit names don't fit 5 columns without a horizontal scroll.
+  const chunks = useMemo(() => dayChunks(days, 4), [days])
   // Same render-time-adjustment pattern: re-pick the default week only when
   // the month itself changes, not on every chunk recompute (which would
   // fight the user's manual nav).
@@ -82,7 +84,7 @@ export default function HabitGrid({ habits, year, month, completions, isError, o
 
   if (isError) {
     return (
-      <div className="flex items-center justify-center gap-2 py-10 text-red-500 font-sans text-sm">
+      <div className="flex items-center justify-center gap-2 py-10 text-red-500 font-sans text-base">
         <WarningCircle size={18} weight="fill" aria-hidden="true" />
         No se pudieron cargar los hábitos. Revisa tu conexión e intenta de nuevo.
       </div>
@@ -97,29 +99,33 @@ export default function HabitGrid({ habits, year, month, completions, isError, o
             onClick={() => setMobileWeekIndex((i) => Math.max(0, i - 1))}
             disabled={mobileWeekIndex === 0}
             aria-label="Semana anterior"
-            className="w-7 h-7 flex items-center justify-center rounded-full text-cream-600 dark:text-cream-300 disabled:opacity-30 hover:bg-cream-200 dark:hover:bg-cream-700 transition-colors focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1"
+            className="w-7 h-7 flex items-center justify-center rounded-full text-cream-600 dark:text-cream-300 disabled:opacity-30 hover:bg-cream-200 dark:hover:bg-cream-700 transition-all active:scale-90 focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1"
           >
             <CaretLeft size={14} weight="bold" />
           </button>
-          <span className="text-xs font-bold text-cream-700 dark:text-cream-200 font-sans">
+          <span className="text-sm font-bold text-cream-700 dark:text-cream-200 font-sans">
             Días {activeChunk[0]}–{activeChunk[activeChunk.length - 1]}
           </span>
           <button
             onClick={() => setMobileWeekIndex((i) => Math.min(chunks.length - 1, i + 1))}
             disabled={mobileWeekIndex === chunks.length - 1}
             aria-label="Semana siguiente"
-            className="w-7 h-7 flex items-center justify-center rounded-full text-cream-600 dark:text-cream-300 disabled:opacity-30 hover:bg-cream-200 dark:hover:bg-cream-700 transition-colors focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1"
+            className="w-7 h-7 flex items-center justify-center rounded-full text-cream-600 dark:text-cream-300 disabled:opacity-30 hover:bg-cream-200 dark:hover:bg-cream-700 transition-all active:scale-90 focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1"
           >
             <CaretRight size={14} weight="bold" />
           </button>
         </div>
       )}
+      <div className="relative">
       <div className="overflow-x-auto grid-scroll">
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <table className="text-xs w-full" style={{ borderCollapse: 'separate', borderSpacing: '0px 2px' }}>
+        {/* table-fixed makes the declared column widths authoritative — without
+            it, unbreakable content (e.g. "100%") forces auto-layout to widen
+            a column past its budgeted share, blowing the mobile-page fit. */}
+        <table className="text-sm w-full table-fixed" style={{ borderCollapse: 'separate', borderSpacing: '0px 2px' }}>
           <thead>
             <tr className="bg-cream-100 dark:bg-cream-700">
-              <th className="py-2 px-2 text-left font-bold text-cream-700 dark:text-cream-200 sticky left-0 bg-cream-100 dark:bg-cream-700 z-10 min-w-[108px] max-w-[108px] sm:min-w-[172px] sm:max-w-[172px] rounded-sm">
+              <th className="py-2 px-2 text-left font-bold text-cream-700 dark:text-cream-200 sticky left-0 bg-cream-100 dark:bg-cream-700 z-10 w-[140px] sm:w-[190px] rounded-sm">
                 HÁBITO
               </th>
               {days.map((d) => {
@@ -130,7 +136,7 @@ export default function HabitGrid({ habits, year, month, completions, isError, o
                   <th
                     key={d}
                     className={[
-                      'text-center font-bold py-2 rounded-sm text-base tabular-nums w-7 min-w-[1.75rem] sm:w-8 sm:min-w-[2rem]',
+                      'text-center font-bold py-2 rounded-sm text-lg tabular-nums w-10 min-w-[2.5rem] sm:w-[30px]',
                       isToday ? 'text-cream-800 dark:text-cream-100 underline underline-offset-2' : 'text-cream-600 dark:text-cream-300',
                       hiddenOnMobile ? 'hidden sm:table-cell' : '',
                     ].join(' ')}
@@ -160,7 +166,7 @@ export default function HabitGrid({ habits, year, month, completions, isError, o
               ))}
               {orderedHabits.length === 0 && (
                 <tr>
-                  <td colSpan={days.length + 2} className="text-center py-8 text-cream-700 dark:text-cream-400 font-handwritten text-base">
+                  <td colSpan={days.length + 2} className="text-center py-8 text-cream-700 dark:text-cream-400 font-handwritten text-lg">
                     Aún no hay hábitos — ¡agrega uno con el botón +!
                   </td>
                 </tr>
@@ -169,6 +175,14 @@ export default function HabitGrid({ habits, year, month, completions, isError, o
           </SortableContext>
         </table>
         </DndContext>
+      </div>
+      {/* Bigger fonts mean the 5-day mobile page can run a bit wider than the
+          screen — this hints there's more to scroll to, instead of an
+          abrupt hard cut at the edge. */}
+      <div
+        className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-cream-50 dark:from-cream-800 to-transparent rounded-r-lg block sm:hidden"
+        aria-hidden="true"
+      />
       </div>
       {reorderError && (
         <Toast message={reorderError} durationMs={3000} onTimeout={() => setReorderError(null)} />

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plant, Sun, Moon, CalendarBlank, Plus, SignOut } from '@phosphor-icons/react'
+import { Plant, Sun, Moon, CalendarBlank, Plus, SignOut, Heart } from '@phosphor-icons/react'
 import { signOut } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
 import { useHabits } from '@/hooks/useHabits'
@@ -65,7 +65,7 @@ export default function Tracker() {
 
   return (
     <div className="min-h-screen bg-cream-100 dark:bg-cream-950 transition-colors duration-200">
-      <div className="max-w-screen-xl mx-auto px-4 py-8">
+      <div className="max-w-screen-xl mx-auto px-3 sm:px-4 py-8">
 
         {/* ── Header ── */}
         <header className="mb-6 sm:relative">
@@ -74,14 +74,14 @@ export default function Tracker() {
           <div className="flex items-center justify-center gap-1.5 mb-3 sm:mb-0 sm:absolute sm:right-0 sm:top-0">
             <button
               onClick={() => navigate('/history')}
-              className="flex items-center gap-1.5 h-11 text-xs font-600 text-cream-600 dark:text-cream-300 border border-cream-200 dark:border-cream-700 rounded-full px-4 hover:bg-cream-200 dark:hover:bg-cream-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+              className="flex items-center gap-1.5 h-11 text-sm font-600 text-cream-600 dark:text-cream-300 border border-cream-200 dark:border-cream-700 rounded-full px-4 hover:bg-cream-200 dark:hover:bg-cream-800 transition-all active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
             >
               <CalendarBlank size={13} weight="bold" aria-hidden="true" />
               Historial
             </button>
             <button
               onClick={() => toggleDark(!darkMode)}
-              className="w-11 h-11 rounded-full border border-cream-200 dark:border-cream-700 bg-cream-50 dark:bg-cream-800 hover:bg-cream-200 dark:hover:bg-cream-700 text-cream-500 dark:text-cream-300 flex items-center justify-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+              className="w-11 h-11 rounded-full border border-cream-200 dark:border-cream-700 bg-cream-50 dark:bg-cream-800 hover:bg-cream-200 dark:hover:bg-cream-700 text-cream-500 dark:text-cream-300 flex items-center justify-center transition-all active:scale-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
               aria-label={darkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
             >
               {darkMode ? <Sun size={15} weight="fill" /> : <Moon size={15} weight="fill" />}
@@ -89,7 +89,7 @@ export default function Tracker() {
             {!DEMO && (
               <button
                 onClick={() => signOut(auth)}
-                className="w-11 h-11 rounded-full border border-cream-200 dark:border-cream-700 bg-cream-50 dark:bg-cream-800 hover:bg-cream-200 dark:hover:bg-cream-700 text-cream-600 dark:text-cream-400 flex items-center justify-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+                className="w-11 h-11 rounded-full border border-cream-200 dark:border-cream-700 bg-cream-50 dark:bg-cream-800 hover:bg-cream-200 dark:hover:bg-cream-700 text-cream-600 dark:text-cream-400 flex items-center justify-center transition-all active:scale-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
                 aria-label="Cerrar sesión"
                 title="Cerrar sesión"
               >
@@ -105,10 +105,10 @@ export default function Tracker() {
                 <Plant className="text-sage-600 dark:text-sage-400" size={24} weight="fill" aria-hidden="true" />
               </div>
               <div className="text-left">
-                <h1 className="font-serif font-700 text-2xl sm:text-3xl text-cream-800 dark:text-cream-100">
+                <h1 className="font-serif font-700 text-3xl sm:text-4xl text-cream-800 dark:text-cream-100">
                   Seguimiento de Hábitos
                 </h1>
-                <p className="font-handwritten text-cream-700 dark:text-cream-400 text-base mt-0.5">
+                <p className="font-handwritten text-cream-700 dark:text-cream-400 text-lg mt-0.5">
                   Pequeños hábitos, grandes cambios. ♥
                 </p>
               </div>
@@ -117,8 +117,8 @@ export default function Tracker() {
             {/* Global % badge */}
             {globalPct !== null && (
               <div className="mt-3 inline-flex items-center gap-2 bg-cream-50 dark:bg-cream-800 border border-cream-200 dark:border-cream-700 rounded-full px-4 py-1.5 shadow-xs">
-                <span className="text-xs text-cream-500 dark:text-cream-400 font-sans">Este mes</span>
-                <span className="font-sans font-800 text-sm tabular-nums" style={{ color: pctColor }}>
+                <span className="text-sm text-cream-700 dark:text-cream-400 font-sans">Este mes</span>
+                <span className="font-sans font-800 text-base tabular-nums" style={{ color: pctColor }}>
                   {String(globalPct).padStart(2, '0')}%
                 </span>
                 <div className="w-24 h-1.5 rounded-full bg-cream-200 dark:bg-cream-700 overflow-hidden">
@@ -136,19 +136,19 @@ export default function Tracker() {
         <div className="bg-cream-50 dark:bg-cream-800 border border-cream-200 dark:border-cream-700 rounded-xl px-4 py-3 mb-4 shadow-xs flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
           <MonthNav year={year} month={month} onPrev={prevMonth} onNext={nextMonth} />
           <div className="flex items-center gap-2 flex-1 sm:max-w-xs">
-            <label className="text-xs font-600 font-sans uppercase tracking-widest text-cream-700 dark:text-cream-400 shrink-0">Meta</label>
+            <label className="text-sm font-600 font-sans uppercase tracking-widest text-cream-700 dark:text-cream-400 shrink-0">Meta</label>
             <input
               key={`goal-${monthStr}`}
               defaultValue={log?.goal ?? ''}
               onChange={(e) => updateLog.mutate({ goal: e.target.value })}
               placeholder="Define una meta mensual..."
               aria-label="Meta de este mes"
-              className="flex-1 border-b border-cream-200 dark:border-cream-700 bg-transparent text-sm text-cream-800 dark:text-cream-100 placeholder-cream-300 dark:placeholder-cream-600 focus:outline-none focus:border-amber-400 transition-colors pb-0.5 font-sans"
+              className="flex-1 border-b border-cream-200 dark:border-cream-700 bg-transparent text-base text-cream-800 dark:text-cream-100 placeholder-cream-300 dark:placeholder-cream-600 focus:outline-none focus:border-amber-400 transition-colors pb-0.5 font-sans"
             />
           </div>
           <button
             onClick={() => setShowAddModal(true)}
-            className="w-8 h-8 rounded-full bg-terracotta-600 text-cream-50 hover:bg-terracotta-700 shadow-sm transition-colors flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 shrink-0"
+            className="w-8 h-8 rounded-full bg-terracotta-600 text-cream-50 hover:bg-terracotta-700 shadow-sm transition-all active:scale-90 flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 shrink-0"
             aria-label="Agregar hábito"
           >
             <Plus size={16} weight="bold" />
@@ -159,7 +159,9 @@ export default function Tracker() {
         <BestStreaks habits={habits} completions={completions} title="Mejores rachas este mes" />
 
         {/* ── Grid ── */}
-        <div className="bg-cream-50 dark:bg-cream-800 border border-cream-200 dark:border-cream-700 rounded-xl p-3 shadow-soft">
+        {/* key={monthStr} forces a remount on month nav so content-fade-in
+            replays — a subtle cue that the page actually changed. */}
+        <div key={monthStr} className="content-fade-in bg-cream-50 dark:bg-cream-800 border border-cream-200 dark:border-cream-700 rounded-xl p-1.5 sm:p-3 shadow-soft">
           {habitsLoading ? (
             <div className="animate-pulse space-y-2" role="status" aria-label="Cargando hábitos">
               {[...Array(4)].map((_, i) => (
@@ -185,9 +187,17 @@ export default function Tracker() {
         </div>
 
         {/* ── Footer ── */}
-        <footer className="mt-6 text-center">
-          <p className="font-handwritten text-cream-700 dark:text-cream-400 text-sm tracking-wide">
-            Conviértelo en hábito. Sé constante. Te estás convirtiendo en tu mejor versión. ❤️
+        <footer className="mt-8 pt-5 border-t border-cream-200 dark:border-cream-700 flex flex-col items-center gap-2 text-center">
+          <div className="flex items-center gap-1.5 text-cream-500 dark:text-cream-500">
+            <Plant size={15} weight="fill" aria-hidden="true" />
+            <span className="font-sans text-sm font-800 uppercase tracking-widest">Hábitos</span>
+          </div>
+          <p className="font-handwritten text-cream-700 dark:text-cream-400 text-lg tracking-wide inline-flex items-center gap-1">
+            Conviértelo en hábito. Sé constante. Te estás convirtiendo en tu mejor versión.
+            <Heart size={16} weight="fill" aria-hidden="true" />
+          </p>
+          <p className="font-sans text-sm text-cream-600 dark:text-cream-500">
+            © {new Date().getFullYear()} Hábitos. Todos los derechos reservados.
           </p>
         </footer>
 

@@ -70,10 +70,10 @@ function MonthCard({ year, month, habits, isSelected, onClick }: MonthCardProps)
       ].join(' ')}
     >
       <div className="flex items-center justify-between mb-3">
-        <span className="font-sans font-bold text-sm text-cream-800 dark:text-cream-100">
+        <span className="font-sans font-bold text-base text-cream-800 dark:text-cream-100">
           {MONTH_NAMES[month - 1]} {year}
         </span>
-        <span className="font-sans font-bold text-lg" style={{ color }}>{pct}%</span>
+        <span className="font-sans font-bold text-xl" style={{ color }}>{pct}%</span>
       </div>
 
       {/* Mini bar per habit */}
@@ -85,18 +85,18 @@ function MonthCard({ year, month, habits, isSelected, onClick }: MonthCardProps)
           const hp = effectivePeriods > 0 ? Math.min(100, Math.round((done / effectivePeriods) * 100)) : 0
           return (
             <div key={h.id} className="flex items-center gap-1.5">
-              <span className="text-xs w-4 text-center">{h.icon}</span>
+              <span className="text-sm w-4 text-center">{h.icon}</span>
               <div className="flex-1 h-1.5 rounded-full bg-cream-200 dark:bg-cream-600 overflow-hidden">
                 <div className="h-full rounded-full" style={{ width: `${hp}%`, backgroundColor: h.color }} />
               </div>
-              <span className="text-xs text-cream-500 dark:text-cream-400 w-8 text-right">{hp}%</span>
+              <span className="text-sm text-cream-500 dark:text-cream-400 w-8 text-right">{hp}%</span>
             </div>
           )
         })}
       </div>
 
       {log?.goal && (
-        <p className="mt-2 flex items-center gap-1 text-xs text-cream-500 dark:text-cream-400 truncate font-handwritten">
+        <p className="mt-2 flex items-center gap-1 text-sm text-cream-500 dark:text-cream-400 truncate font-handwritten">
           <Target size={12} weight="bold" aria-hidden="true" />
           {log.goal}
         </p>
@@ -143,7 +143,7 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
 
   return (
     <div>
-      <h2 className="font-sans font-extrabold text-xl text-cream-800 dark:text-cream-100 tracking-widest mb-4">
+      <h2 className="font-sans font-extrabold text-2xl text-cream-800 dark:text-cream-100 tracking-widest mb-4">
         {MONTH_NAMES[month - 1].toUpperCase()} {year}
       </h2>
 
@@ -160,7 +160,7 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
             >
               <CaretLeft size={14} weight="bold" />
             </button>
-            <span className="text-xs font-bold text-cream-700 dark:text-cream-200 font-sans">
+            <span className="text-sm font-bold text-cream-700 dark:text-cream-200 font-sans">
               Días {activeChunk[0]}–{activeChunk[activeChunk.length - 1]}
             </span>
             <button
@@ -174,12 +174,12 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
           </div>
         )}
         <div className="overflow-x-auto grid-scroll">
-        <table className="text-xs border-collapse w-full">
+        <table className="text-sm border-collapse w-full">
           <thead>
             <tr className="bg-cream-100 dark:bg-cream-700 border-b border-cream-300 dark:border-cream-600">
               <th className="py-1.5 px-2 text-left font-bold text-cream-700 dark:text-cream-200 sticky left-0 bg-cream-100 dark:bg-cream-700 z-10 min-w-[150px] max-w-[150px] sm:min-w-[210px] sm:max-w-[210px]">HÁBITO</th>
               {days.map((d) => (
-                <th key={d} className={['w-5 text-center font-bold text-cream-500 dark:text-cream-400 py-1.5', !mobileVisibleDays.has(d) ? 'hidden sm:table-cell' : ''].join(' ')}>{d}</th>
+                <th key={d} className={['w-5 text-center font-bold text-cream-600 dark:text-cream-200 py-1.5', !mobileVisibleDays.has(d) ? 'hidden sm:table-cell' : ''].join(' ')}>{d}</th>
               ))}
               <th className="px-2 text-center font-bold text-cream-700 dark:text-cream-200">%</th>
             </tr>
@@ -198,7 +198,7 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
                   <td className="py-1 px-2 sticky left-0 bg-cream-50 dark:bg-cream-800 z-10 min-w-[150px] max-w-[150px] sm:min-w-[210px] sm:max-w-[210px]">
                     <span
                       title={habit.name}
-                      className="font-sans font-bold text-xs text-cream-800 dark:text-cream-100 leading-tight [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] overflow-hidden"
+                      className="font-sans font-bold text-sm text-cream-800 dark:text-cream-100 leading-tight [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] overflow-hidden"
                     >
                       {habit.icon} {habit.name}
                     </span>
@@ -243,49 +243,49 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {log.goal && (
             <div className="bg-cream-100 dark:bg-cream-700/50 rounded-lg p-3 border border-cream-200 dark:border-cream-600">
-              <p className="flex items-center gap-1 text-xs font-bold text-cream-600 dark:text-cream-300 uppercase tracking-wide mb-1">
+              <p className="flex items-center gap-1 text-sm font-bold text-cream-600 dark:text-cream-300 uppercase tracking-wide mb-1">
                 <Target size={12} weight="bold" aria-hidden="true" /> Meta
               </p>
-              <p className="text-sm text-cream-800 dark:text-cream-100 font-handwritten">{log.goal}</p>
+              <p className="text-base text-cream-800 dark:text-cream-100 font-handwritten">{log.goal}</p>
             </div>
           )}
           {log.reflection_well && (
             <div className="bg-cream-100 dark:bg-cream-700/50 rounded-lg p-3 border border-cream-200 dark:border-cream-600">
-              <p className="flex items-center gap-1 text-xs font-bold text-cream-600 dark:text-cream-300 uppercase tracking-wide mb-1">
+              <p className="flex items-center gap-1 text-sm font-bold text-cream-600 dark:text-cream-300 uppercase tracking-wide mb-1">
                 <CheckCircle size={12} weight="bold" aria-hidden="true" /> Qué salió bien
               </p>
-              <p className="text-sm text-cream-800 dark:text-cream-100 font-handwritten">{log.reflection_well}</p>
+              <p className="text-base text-cream-800 dark:text-cream-100 font-handwritten">{log.reflection_well}</p>
             </div>
           )}
           {log.reflection_improve && (
             <div className="bg-cream-100 dark:bg-cream-700/50 rounded-lg p-3 border border-cream-200 dark:border-cream-600">
-              <p className="flex items-center gap-1 text-xs font-bold text-cream-600 dark:text-cream-300 uppercase tracking-wide mb-1">
+              <p className="flex items-center gap-1 text-sm font-bold text-cream-600 dark:text-cream-300 uppercase tracking-wide mb-1">
                 <TrendUp size={12} weight="bold" aria-hidden="true" /> Por mejorar
               </p>
-              <p className="text-sm text-cream-800 dark:text-cream-100 font-handwritten">{log.reflection_improve}</p>
+              <p className="text-base text-cream-800 dark:text-cream-100 font-handwritten">{log.reflection_improve}</p>
             </div>
           )}
           {log.reflection_proud && (
             <div className="bg-cream-100 dark:bg-cream-700/50 rounded-lg p-3 border border-cream-200 dark:border-cream-600">
-              <p className="flex items-center gap-1 text-xs font-bold text-cream-600 dark:text-cream-300 uppercase tracking-wide mb-1">
+              <p className="flex items-center gap-1 text-sm font-bold text-cream-600 dark:text-cream-300 uppercase tracking-wide mb-1">
                 <Star size={12} weight="bold" aria-hidden="true" /> Orgullo de
               </p>
-              <p className="text-sm text-cream-800 dark:text-cream-100 font-handwritten">{log.reflection_proud}</p>
+              <p className="text-base text-cream-800 dark:text-cream-100 font-handwritten">{log.reflection_proud}</p>
             </div>
           )}
           {log.notes && (
             <div className="sm:col-span-2 bg-cream-100 dark:bg-cream-700/50 rounded-lg p-3 border border-cream-200 dark:border-cream-600">
-              <p className="flex items-center gap-1 text-xs font-bold text-cream-600 dark:text-cream-300 uppercase tracking-wide mb-1">
+              <p className="flex items-center gap-1 text-sm font-bold text-cream-600 dark:text-cream-300 uppercase tracking-wide mb-1">
                 <NotePencil size={12} weight="bold" aria-hidden="true" /> Notas
               </p>
-              <p className="text-sm text-cream-800 dark:text-cream-100 font-handwritten whitespace-pre-wrap">{log.notes}</p>
+              <p className="text-base text-cream-800 dark:text-cream-100 font-handwritten whitespace-pre-wrap">{log.notes}</p>
             </div>
           )}
         </div>
       )}
 
       {!log?.goal && !log?.reflection_well && !log?.reflection_improve && !log?.reflection_proud && !log?.notes && (
-        <p className="text-cream-700 dark:text-cream-400 font-handwritten text-sm text-center py-4">
+        <p className="text-cream-700 dark:text-cream-400 font-handwritten text-base text-center py-4">
           No hay reflexión escrita para este mes.
         </p>
       )}
@@ -318,11 +318,11 @@ export default function History() {
             <CaretLeft size={16} weight="bold" />
           </button>
           <div>
-            <h1 className="font-sans font-extrabold text-2xl tracking-widest text-cream-800 dark:text-cream-100 flex items-center gap-2">
+            <h1 className="font-sans font-extrabold text-3xl tracking-widest text-cream-800 dark:text-cream-100 flex items-center gap-2">
               <CalendarBlank size={22} weight="fill" aria-hidden="true" />
               HISTORIAL
             </h1>
-            <p className="font-handwritten text-cream-500 text-base">Tus últimos 12 meses de un vistazo.</p>
+            <p className="font-handwritten text-cream-700 dark:text-cream-400 text-lg">Tus últimos 12 meses de un vistazo.</p>
           </div>
         </div>
 

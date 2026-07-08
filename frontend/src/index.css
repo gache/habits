@@ -45,6 +45,38 @@ body {
   }
 }
 
+/* Toast entrance — slide up + fade so it doesn't just pop into place */
+@keyframes toast-in {
+  0%   { opacity: 0; transform: translate(-50%, 8px); }
+  100% { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.toast-in {
+  animation: toast-in 0.2s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast-in {
+    animation: none;
+  }
+}
+
+/* Month-content fade — hints a page change happened when nav'ing months */
+@keyframes content-fade-in {
+  0%   { opacity: 0; transform: translateY(4px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.content-fade-in {
+  animation: content-fade-in 0.2s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .content-fade-in {
+    animation: none;
+  }
+}
+
 /* Dense day-grid tables overflow horizontally by design (31 columns need
    more room than 44px touch targets allow on one row). Force the scrollbar
    always visible so the cut-off last day reads as "scroll for more", not

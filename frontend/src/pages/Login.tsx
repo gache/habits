@@ -64,7 +64,7 @@ export default function Login() {
     }
   }
 
-  const inputClass = 'w-full border border-cream-200 rounded-lg px-3.5 py-2.5 text-sm bg-cream-100 dark:bg-cream-800 text-cream-800 dark:text-cream-100 placeholder-cream-300 dark:placeholder-cream-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus:border-amber-300 transition-colors font-sans'
+  const inputClass = 'w-full border border-cream-200 rounded-lg px-3.5 py-2.5 text-base bg-cream-100 dark:bg-cream-800 text-cream-800 dark:text-cream-100 placeholder-cream-300 dark:placeholder-cream-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus:border-amber-300 transition-colors font-sans'
 
   return (
     <div className="min-h-screen bg-cream-100 dark:bg-cream-950 flex items-center justify-center px-4">
@@ -76,10 +76,10 @@ export default function Login() {
             <div className="w-14 h-14 rounded-2xl bg-cream-100 dark:bg-cream-700 flex items-center justify-center mx-auto mb-3 shadow-xs">
               <Plant size={28} weight="fill" className="text-sage-600" aria-hidden="true" />
             </div>
-            <h1 className="font-serif font-700 text-xl text-cream-800 dark:text-cream-100">
+            <h1 className="font-serif font-700 text-2xl text-cream-800 dark:text-cream-100">
               Seguimiento de Hábitos
             </h1>
-            <p className="font-handwritten text-cream-700 dark:text-cream-400 text-base mt-1">
+            <p className="font-handwritten text-cream-700 dark:text-cream-400 text-lg mt-1">
               Pequeños hábitos, grandes cambios. ♥
             </p>
           </div>
@@ -91,10 +91,10 @@ export default function Login() {
                 key={label}
                 onClick={() => setIsSignUp(idx === 1)}
                 className={[
-                  'flex-1 py-1.5 text-sm font-600 rounded-md transition-colors',
+                  'flex-1 py-1.5 text-base font-600 rounded-md transition-colors',
                   isSignUp === (idx === 1)
                     ? 'bg-cream-50 dark:bg-cream-800 text-cream-800 dark:text-cream-100 shadow-xs'
-                    : 'text-cream-500 dark:text-cream-400 hover:text-cream-700 dark:hover:text-cream-200',
+                    : 'text-cream-700 dark:text-cream-200 hover:text-cream-800 dark:hover:text-cream-100',
                 ].join(' ')}
               >
                 {label}
@@ -103,24 +103,24 @@ export default function Login() {
           </div>
 
           {error && (
-            <div className="text-red-600 text-xs mb-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2.5 leading-relaxed">
+            <div className="text-red-600 text-sm mb-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2.5 leading-relaxed">
               {error}
             </div>
           )}
 
           {info && (
-            <div className="text-sage-700 dark:text-sage-400 text-xs mb-4 bg-sage-50 dark:bg-sage-900/30 border border-sage-200 dark:border-sage-800 rounded-lg px-3 py-2.5 leading-relaxed">
+            <div className="text-sage-700 dark:text-sage-400 text-sm mb-4 bg-sage-50 dark:bg-sage-900/30 border border-sage-200 dark:border-sage-800 rounded-lg px-3 py-2.5 leading-relaxed">
               {info}
             </div>
           )}
 
           <form onSubmit={handleEmail} className="flex flex-col gap-3">
             <div>
-              <label className="block text-xs font-600 uppercase tracking-widest text-cream-700 dark:text-cream-400 mb-1.5 font-sans">Correo</label>
+              <label className="block text-sm font-600 uppercase tracking-widest text-cream-700 dark:text-cream-400 mb-1.5 font-sans">Correo</label>
               <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@ejemplo.com" className={inputClass} />
             </div>
             <div>
-              <label className="block text-xs font-600 uppercase tracking-widest text-cream-700 dark:text-cream-400 mb-1.5 font-sans">Contraseña</label>
+              <label className="block text-sm font-600 uppercase tracking-widest text-cream-700 dark:text-cream-400 mb-1.5 font-sans">Contraseña</label>
               <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className={inputClass} />
             </div>
             {!isSignUp && (
@@ -128,7 +128,7 @@ export default function Login() {
                 type="button"
                 onClick={handleForgotPassword}
                 disabled={loading}
-                className="self-end text-xs text-cream-700 dark:text-cream-400 hover:text-terracotta-600 dark:hover:text-terracotta-400 transition-colors font-sans disabled:opacity-50"
+                className="self-end text-sm text-cream-700 dark:text-cream-400 hover:text-terracotta-600 dark:hover:text-terracotta-400 transition-colors font-sans disabled:opacity-50"
               >
                 ¿Olvidaste tu contraseña?
               </button>
@@ -136,7 +136,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="mt-1 w-full bg-terracotta-600 text-cream-50 rounded-lg py-2.5 text-sm font-700 hover:bg-terracotta-700 disabled:opacity-50 transition-colors shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+              className="mt-1 w-full bg-terracotta-600 text-cream-50 rounded-lg py-2.5 text-base font-700 hover:bg-terracotta-700 disabled:opacity-50 transition-colors shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
             >
               {loading ? '…' : isSignUp ? 'Crear Cuenta' : 'Iniciar Sesión'}
             </button>
@@ -144,14 +144,14 @@ export default function Login() {
 
           <div className="flex items-center gap-3 my-5">
             <div className="flex-1 h-px bg-cream-200 dark:bg-cream-700" />
-            <span className="text-xs text-cream-300 dark:text-cream-600 font-sans">o</span>
+            <span className="text-sm text-cream-700 dark:text-cream-400 font-sans">o</span>
             <div className="flex-1 h-px bg-cream-200 dark:bg-cream-700" />
           </div>
 
           <button
             onClick={handleGoogle}
             disabled={loading}
-            className="w-full border border-cream-200 dark:border-cream-700 rounded-lg py-2.5 text-sm font-600 text-cream-700 dark:text-cream-200 hover:bg-cream-100 dark:hover:bg-cream-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+            className="w-full border border-cream-200 dark:border-cream-700 rounded-lg py-2.5 text-base font-600 text-cream-700 dark:text-cream-200 hover:bg-cream-100 dark:hover:bg-cream-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
           >
             <svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true">
               <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>

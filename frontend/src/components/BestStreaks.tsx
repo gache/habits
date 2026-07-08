@@ -23,7 +23,7 @@ export default function BestStreaks({ habits, completions, title = 'MEJORES RACH
 
   return (
     <div className="mb-6 bg-cream-50 dark:bg-cream-800 border border-cream-300 dark:border-cream-600 rounded-xl p-4">
-      <h2 className="flex items-center gap-1.5 font-sans font-extrabold text-sm tracking-widest text-cream-800 dark:text-cream-100 mb-3">
+      <h2 className="flex items-center gap-1.5 font-sans font-extrabold text-base tracking-widest text-cream-800 dark:text-cream-100 mb-3">
         <Trophy size={16} weight="fill" aria-hidden="true" />
         {title}
       </h2>
@@ -37,10 +37,10 @@ export default function BestStreaks({ habits, completions, title = 'MEJORES RACH
               className="flex items-center gap-1.5 rounded-full border border-cream-300 dark:border-cream-600 bg-cream-100 dark:bg-cream-700 px-3 py-1.5"
             >
               <Icon size={14} weight="fill" color={level?.color ?? '#a08860'} aria-hidden="true" />
-              <span className="font-sans font-bold text-xs text-cream-800 dark:text-cream-100">
+              <span className="font-sans font-bold text-sm text-cream-800 dark:text-cream-100">
                 {habit.icon} {habit.name}
               </span>
-              <span className="font-sans text-xs text-cream-500 dark:text-cream-300">
+              <span className="font-sans text-sm text-cream-700 dark:text-cream-300">
                 {best} días
               </span>
             </div>

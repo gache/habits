@@ -94,28 +94,28 @@ export default function AddHabitModal({ onClose, editing, onSaved }: AddHabitMod
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-cream-800/30 backdrop-blur-sm px-4">
-      <div className="bg-cream-50 rounded-xl border border-cream-300 shadow-lg w-full max-w-md p-6 relative max-h-[90vh] overflow-y-auto">
+      <div className="dialog-in bg-cream-50 rounded-xl border border-cream-300 shadow-lg w-full max-w-md p-6 relative max-h-[90vh] overflow-y-auto">
         <button
           onClick={onClose}
-          className="absolute top-3 right-4 text-cream-500 hover:text-cream-800 text-xl focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1 rounded"
+          className="absolute top-3 right-4 text-cream-500 hover:text-cream-800 text-2xl transition-all active:scale-90 focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1 rounded"
           aria-label="Cerrar"
         >
           ×
         </button>
-        <h2 className="font-handwritten text-xl text-cream-700 mb-4">
+        <h2 className="font-handwritten text-2xl text-cream-700 mb-4">
           {editing ? 'Editar Hábito' : 'Agregar Nuevo Hábito'}
         </h2>
 
         {!editing && (
           <div className="mb-4">
-            <label className="block text-xs text-cream-600 mb-1.5">Agregar rápido</label>
+            <label className="block text-sm text-cream-700 mb-1.5">Agregar rápido</label>
             <div className="flex flex-wrap gap-1.5">
               {HABIT_PRESETS.map((preset) => (
                 <button
                   type="button"
                   key={preset.name}
                   onClick={() => applyPreset(preset)}
-                  className="flex items-center gap-1 rounded-full border border-cream-300 bg-cream-100 hover:bg-cream-200 px-2.5 py-1 text-xs text-cream-700 transition-colors focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1"
+                  className="flex items-center gap-1 rounded-full border border-cream-300 bg-cream-100 hover:bg-cream-200 px-2.5 py-1 text-sm text-cream-700 transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1"
                 >
                   <span aria-hidden="true">{preset.icon}</span>
                   {preset.name}
@@ -128,14 +128,14 @@ export default function AddHabitModal({ onClose, editing, onSaved }: AddHabitMod
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <div className="flex gap-2">
             <div className="relative">
-              <label className="block text-xs text-cream-600 mb-1">Ícono</label>
+              <label className="block text-sm text-cream-700 mb-1">Ícono</label>
               <button
                 type="button"
                 onClick={() => setShowEmojiPicker((v) => !v)}
                 aria-haspopup="true"
                 aria-expanded={showEmojiPicker}
                 aria-label={`Ícono del hábito, actualmente ${form.icon}. Abrir selector de emojis`}
-                className="w-12 h-9 border border-cream-300 rounded text-center text-lg bg-cream-100 hover:bg-cream-200 transition-colors focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1"
+                className="w-12 h-9 border border-cream-300 rounded text-center text-xl bg-cream-100 hover:bg-cream-200 transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1"
               >
                 {form.icon}
               </button>
@@ -157,7 +157,7 @@ export default function AddHabitModal({ onClose, editing, onSaved }: AddHabitMod
                       }}
                       aria-label={`Usar ícono ${emoji}`}
                       className={[
-                        'w-7 h-7 flex items-center justify-center rounded text-base hover:bg-cream-200 transition-colors focus:outline-none focus:ring-2 focus:ring-cream-400',
+                        'w-7 h-7 flex items-center justify-center rounded text-lg hover:bg-cream-200 transition-colors focus:outline-none focus:ring-2 focus:ring-cream-400',
                         form.icon === emoji ? 'bg-cream-200' : '',
                       ].join(' ')}
                     >
@@ -168,7 +168,7 @@ export default function AddHabitModal({ onClose, editing, onSaved }: AddHabitMod
               )}
             </div>
             <div className="flex-1">
-              <label htmlFor="habit-name" className="block text-xs text-cream-600 mb-1">Nombre *</label>
+              <label htmlFor="habit-name" className="block text-sm text-cream-700 mb-1">Nombre *</label>
               <input
                 id="habit-name"
                 ref={nameInputRef}
@@ -176,29 +176,29 @@ export default function AddHabitModal({ onClose, editing, onSaved }: AddHabitMod
                 value={form.name}
                 onChange={(e) => set('name', e.target.value)}
                 placeholder="ej. TOMAR AGUA"
-                className="w-full border border-cream-300 rounded px-2 py-1.5 text-sm bg-cream-100 focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1 focus:border-cream-400 uppercase"
+                className="w-full border border-cream-300 rounded px-2 py-1.5 text-base bg-cream-100 focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1 focus:border-cream-400 uppercase"
               />
             </div>
           </div>
 
           <div>
-            <label htmlFor="habit-description" className="block text-xs text-cream-600 mb-1">Descripción</label>
+            <label htmlFor="habit-description" className="block text-sm text-cream-700 mb-1">Descripción</label>
             <input
               id="habit-description"
               value={form.description ?? ''}
               onChange={(e) => set('description', e.target.value)}
               placeholder="ej. 8 vasos"
-              className="w-full border border-cream-300 rounded px-2 py-1.5 text-sm bg-cream-100 focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1 focus:border-cream-400"
+              className="w-full border border-cream-300 rounded px-2 py-1.5 text-base bg-cream-100 focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1 focus:border-cream-400"
             />
           </div>
 
           <div>
-            <label htmlFor="habit-frequency" className="block text-xs text-cream-600 mb-1">Frecuencia</label>
+            <label htmlFor="habit-frequency" className="block text-sm text-cream-700 mb-1">Frecuencia</label>
             <select
               id="habit-frequency"
               value={form.frequency}
               onChange={(e) => set('frequency', e.target.value)}
-              className="w-full border border-cream-300 rounded px-2 py-1.5 text-sm bg-cream-100 focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1 focus:border-cream-400"
+              className="w-full border border-cream-300 rounded px-2 py-1.5 text-base bg-cream-100 focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1 focus:border-cream-400"
             >
               {FREQUENCIES.map((f) => (
                 <option key={f} value={f}>{FREQUENCY_LABELS[f]}</option>
@@ -207,7 +207,7 @@ export default function AddHabitModal({ onClose, editing, onSaved }: AddHabitMod
           </div>
 
           <div>
-            <label className="block text-xs text-cream-600 mb-1">Color</label>
+            <label className="block text-sm text-cream-700 mb-1">Color</label>
             <div className="flex flex-wrap gap-2">
               {PRESET_COLORS.map((c) => (
                 <button
@@ -215,7 +215,7 @@ export default function AddHabitModal({ onClose, editing, onSaved }: AddHabitMod
                   key={c}
                   onClick={() => set('color', c)}
                   aria-label={`Seleccionar color ${c}`}
-                  className="w-7 h-7 rounded-full border-2 transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1"
+                  className="w-7 h-7 rounded-full border-2 transition-transform hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1"
                   style={{
                     backgroundColor: c,
                     borderColor: form.color === c ? '#a84d2c' : 'transparent',
@@ -228,7 +228,7 @@ export default function AddHabitModal({ onClose, editing, onSaved }: AddHabitMod
           <button
             type="submit"
             disabled={createHabit.isPending || updateHabit.isPending}
-            className="mt-2 bg-terracotta-600 text-cream-50 rounded px-4 py-2 text-sm font-bold hover:bg-terracotta-700 disabled:opacity-50 transition-colors focus:outline-none focus:ring-2 focus:ring-terracotta-400 focus:ring-offset-1"
+            className="mt-2 bg-terracotta-600 text-cream-50 rounded px-4 py-2 text-base font-bold hover:bg-terracotta-700 disabled:opacity-50 transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-terracotta-400 focus:ring-offset-1"
           >
             {editing ? 'Guardar Cambios' : 'Agregar Hábito'}
           </button>
