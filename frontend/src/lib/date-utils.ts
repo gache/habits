@@ -126,6 +126,22 @@ export function countCompletedPeriods(
 }
 
 /**
+ * Groups a month's day numbers into ISO-week (Monday-Sunday) chunks — used
+ * to show just one week at a time on narrow screens, so a day grid and its
+ * total column fit without horizontal scroll.
+ */
+export function weekChunks(monthStr: string, days: number[]): number[][] {
+  const groups = new Map<string, number[]>()
+  for (const day of days) {
+    const dateStr = `${monthStr}-${pad(day)}`
+    const [mondayKey] = periodBounds('weekly', dateStr)!
+    if (!groups.has(mondayKey)) groups.set(mondayKey, [])
+    groups.get(mondayKey)!.push(day)
+  }
+  return [...groups.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([, v]) => v)
+}
+
+/**
  * Current streak: how many consecutive days ending on or before today
  * have a completion for this habit.
  */

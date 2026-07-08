@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CaretLeft, CalendarBlank, Target, CheckCircle, TrendUp, Star, NotePencil } from '@phosphor-icons/react'
+import { CaretLeft, CaretRight, CalendarBlank, Target, CheckCircle, TrendUp, Star, NotePencil } from '@phosphor-icons/react'
 import { useHabits, type Habit } from '@/hooks/useHabits'
 import { useCompletions, useCompletionsForMonths } from '@/hooks/useCompletions'
 import { useMonthlyLog } from '@/hooks/useMonthlyLog'
-import { getDaysInMonth, pad, todayStr, habitDaysElapsed, habitPeriodsElapsed, countCompletedPeriods } from '@/lib/date-utils'
+import { getDaysInMonth, pad, todayStr, habitDaysElapsed, habitPeriodsElapsed, countCompletedPeriods, weekChunks } from '@/lib/date-utils'
 import { getProgressColor, getProgressBg } from '@/lib/progress-color'
 import BestStreaks from '@/components/BestStreaks'
 
@@ -118,10 +118,24 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
   const { data: completions = [], isLoading } = useCompletions(monthStr)
   const { data: log } = useMonthlyLog(monthStr)
   const daysInMonth = getDaysInMonth(year, month)
-  const days = Array.from({ length: daysInMonth }, (_, i) => i + 1)
+  const days = useMemo(() => Array.from({ length: daysInMonth }, (_, i) => i + 1), [daysInMonth])
   const today = todayStr()
   const isCurrentMonth = monthStr === today.slice(0, 7)
   const daysElapsed = isCurrentMonth ? new Date().getDate() : daysInMonth
+
+  // Same narrow-screen treatment as the Tracker grid: show one ISO week at
+  // a time so the heatmap and % column fit without horizontal scroll.
+  const chunks = useMemo(() => weekChunks(monthStr, days), [monthStr, days])
+  const [mobileWeekIndex, setMobileWeekIndex] = useState(0)
+  const [prevMonthStr, setPrevMonthStr] = useState(monthStr)
+  if (monthStr !== prevMonthStr) {
+    setPrevMonthStr(monthStr)
+    const todayDay = new Date().getDate()
+    const idx = isCurrentMonth ? chunks.findIndex((chunk) => chunk.includes(todayDay)) : -1
+    setMobileWeekIndex(idx === -1 ? 0 : idx)
+  }
+  const activeChunk = chunks[mobileWeekIndex] ?? days
+  const mobileVisibleDays = useMemo(() => new Set(activeChunk), [activeChunk])
 
   if (isLoading) {
     return <p className="text-center py-10 text-cream-700 dark:text-cream-400 font-handwritten">Cargando...</p>
@@ -135,13 +149,37 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
 
       {/* Mini heatmap per habit */}
       <div className="relative mb-5">
-      <div className="overflow-x-auto grid-scroll rounded-lg border border-cream-300 dark:border-cream-600">
+      <div className="rounded-lg border border-cream-300 dark:border-cream-600">
+        {chunks.length > 1 && (
+          <div className="flex items-center justify-between px-2 py-1.5 border-b border-cream-300 dark:border-cream-600 sm:hidden">
+            <button
+              onClick={() => setMobileWeekIndex((i) => Math.max(0, i - 1))}
+              disabled={mobileWeekIndex === 0}
+              aria-label="Semana anterior"
+              className="w-7 h-7 flex items-center justify-center rounded-full text-cream-600 dark:text-cream-300 disabled:opacity-30 hover:bg-cream-200 dark:hover:bg-cream-700 transition-colors focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1"
+            >
+              <CaretLeft size={14} weight="bold" />
+            </button>
+            <span className="text-xs font-bold text-cream-700 dark:text-cream-200 font-sans">
+              Días {activeChunk[0]}–{activeChunk[activeChunk.length - 1]}
+            </span>
+            <button
+              onClick={() => setMobileWeekIndex((i) => Math.min(chunks.length - 1, i + 1))}
+              disabled={mobileWeekIndex === chunks.length - 1}
+              aria-label="Semana siguiente"
+              className="w-7 h-7 flex items-center justify-center rounded-full text-cream-600 dark:text-cream-300 disabled:opacity-30 hover:bg-cream-200 dark:hover:bg-cream-700 transition-colors focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1"
+            >
+              <CaretRight size={14} weight="bold" />
+            </button>
+          </div>
+        )}
+        <div className="overflow-x-auto grid-scroll">
         <table className="text-xs border-collapse w-full">
           <thead>
             <tr className="bg-cream-100 dark:bg-cream-700 border-b border-cream-300 dark:border-cream-600">
-              <th className="py-1.5 px-2 text-left font-bold text-cream-700 dark:text-cream-200 sticky left-0 bg-cream-100 dark:bg-cream-700 z-10 min-w-[210px] max-w-[210px]">HÁBITO</th>
+              <th className="py-1.5 px-2 text-left font-bold text-cream-700 dark:text-cream-200 sticky left-0 bg-cream-100 dark:bg-cream-700 z-10 min-w-[150px] max-w-[150px] sm:min-w-[210px] sm:max-w-[210px]">HÁBITO</th>
               {days.map((d) => (
-                <th key={d} className="w-5 text-center font-bold text-cream-500 dark:text-cream-400 py-1.5">{d}</th>
+                <th key={d} className={['w-5 text-center font-bold text-cream-500 dark:text-cream-400 py-1.5', !mobileVisibleDays.has(d) ? 'hidden sm:table-cell' : ''].join(' ')}>{d}</th>
               ))}
               <th className="px-2 text-center font-bold text-cream-700 dark:text-cream-200">%</th>
             </tr>
@@ -157,7 +195,7 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
               const pct = effectivePeriods > 0 ? Math.min(100, Math.round((completedUpToToday / effectivePeriods) * 100)) : 0
               return (
                 <tr key={habit.id} className="border-b border-cream-200 dark:border-cream-600">
-                  <td className="py-1 px-2 sticky left-0 bg-cream-50 dark:bg-cream-800 z-10 min-w-[210px] max-w-[210px]">
+                  <td className="py-1 px-2 sticky left-0 bg-cream-50 dark:bg-cream-800 z-10 min-w-[150px] max-w-[150px] sm:min-w-[210px] sm:max-w-[210px]">
                     <span
                       title={habit.name}
                       className="font-sans font-bold text-xs text-cream-800 dark:text-cream-100 leading-tight [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2] overflow-hidden"
@@ -170,7 +208,7 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
                     const completed = done.has(dateStr)
                     const isFuture = dateStr > today
                     return (
-                      <td key={day} className="p-0 text-center">
+                      <td key={day} className={['p-0 text-center', !mobileVisibleDays.has(day) ? 'hidden sm:table-cell' : ''].join(' ')}>
                         <div
                           className="w-4 h-4 mx-auto rounded-sm border"
                           style={{
@@ -192,9 +230,10 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
             })}
           </tbody>
         </table>
+        </div>
       </div>
       <div
-        className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-cream-50 dark:from-cream-800 to-transparent rounded-r-lg"
+        className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-cream-50 dark:from-cream-800 to-transparent rounded-r-lg sm:block hidden"
         aria-hidden="true"
       />
       </div>

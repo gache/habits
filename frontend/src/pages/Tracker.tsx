@@ -68,9 +68,10 @@ export default function Tracker() {
       <div className="max-w-screen-xl mx-auto px-4 py-8">
 
         {/* ── Header ── */}
-        <header className="mb-6 relative">
-          {/* Controls */}
-          <div className="absolute right-0 top-0 flex items-center gap-1.5">
+        <header className="mb-6 sm:relative">
+          {/* Controls — stacked above the title on mobile so they never
+              overlap it; pinned top-right from `sm` up like before. */}
+          <div className="flex items-center justify-center gap-1.5 mb-3 sm:mb-0 sm:absolute sm:right-0 sm:top-0">
             <button
               onClick={() => navigate('/history')}
               className="flex items-center gap-1.5 h-11 text-xs font-600 text-cream-600 dark:text-cream-300 border border-cream-200 dark:border-cream-700 rounded-full px-4 hover:bg-cream-200 dark:hover:bg-cream-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"

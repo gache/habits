@@ -14,22 +14,8 @@ import { type Habit, useReorderHabits } from '@/hooks/useHabits'
 import { type Completion } from '@/hooks/useCompletions'
 import HabitRow from './HabitRow'
 import Toast from './Toast'
-import { getDaysInMonth, pad, todayStr, periodBounds } from '@/lib/date-utils'
+import { getDaysInMonth, pad, todayStr, weekChunks } from '@/lib/date-utils'
 import { reorderHabits } from '@/lib/reorder'
-
-/** Groups a month's day numbers into ISO-week (Monday-Sunday) chunks — used
- * to show just one week at a time on narrow screens, so the day grid and
- * total column fit without horizontal scroll. */
-function weekChunks(monthStr: string, days: number[]): number[][] {
-  const groups = new Map<string, number[]>()
-  for (const day of days) {
-    const dateStr = `${monthStr}-${pad(day)}`
-    const [mondayKey] = periodBounds('weekly', dateStr)!
-    if (!groups.has(mondayKey)) groups.set(mondayKey, [])
-    groups.get(mondayKey)!.push(day)
-  }
-  return [...groups.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([, v]) => v)
-}
 
 interface HabitGridProps {
   habits: Habit[]
@@ -42,7 +28,7 @@ interface HabitGridProps {
 
 export default function HabitGrid({ habits, year, month, completions, isError, onToggle }: HabitGridProps) {
   const daysInMonth = getDaysInMonth(year, month)
-  const days = Array.from({ length: daysInMonth }, (_, i) => i + 1)
+  const days = useMemo(() => Array.from({ length: daysInMonth }, (_, i) => i + 1), [daysInMonth])
   const monthStr = `${year}-${pad(month)}`
   const today = todayStr()
   const isCurrentMonth = monthStr === today.slice(0, 7)
@@ -129,6 +115,7 @@ export default function HabitGrid({ habits, year, month, completions, isError, o
         </div>
       )}
       <div className="overflow-x-auto grid-scroll">
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <table className="text-xs w-full" style={{ borderCollapse: 'separate', borderSpacing: '0px 2px' }}>
           <thead>
             <tr className="bg-cream-100 dark:bg-cream-700">
@@ -155,34 +142,33 @@ export default function HabitGrid({ habits, year, month, completions, isError, o
               <th className="px-1.5 text-center font-bold text-cream-700 dark:text-cream-200 w-10 sm:w-12 rounded-sm">TOTAL</th>
             </tr>
           </thead>
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={orderedHabits.map((h) => h.id)} strategy={verticalListSortingStrategy}>
-              <tbody>
-                {orderedHabits.map((habit) => (
-                  <HabitRow
-                    key={habit.id}
-                    habit={habit}
-                    days={days}
-                    monthStr={monthStr}
-                    today={today}
-                    totalDays={daysElapsed}
-                    completions={completions}
-                    showStreak={isCurrentMonth}
-                    mobileVisibleDays={mobileVisibleDays}
-                    onToggle={onToggle}
-                  />
-                ))}
-                {orderedHabits.length === 0 && (
-                  <tr>
-                    <td colSpan={days.length + 2} className="text-center py-8 text-cream-700 dark:text-cream-400 font-handwritten text-base">
-                      Aún no hay hábitos — ¡agrega uno con el botón +!
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </SortableContext>
-          </DndContext>
+          <SortableContext items={orderedHabits.map((h) => h.id)} strategy={verticalListSortingStrategy}>
+            <tbody>
+              {orderedHabits.map((habit) => (
+                <HabitRow
+                  key={habit.id}
+                  habit={habit}
+                  days={days}
+                  monthStr={monthStr}
+                  today={today}
+                  totalDays={daysElapsed}
+                  completions={completions}
+                  showStreak={isCurrentMonth}
+                  mobileVisibleDays={mobileVisibleDays}
+                  onToggle={onToggle}
+                />
+              ))}
+              {orderedHabits.length === 0 && (
+                <tr>
+                  <td colSpan={days.length + 2} className="text-center py-8 text-cream-700 dark:text-cream-400 font-handwritten text-base">
+                    Aún no hay hábitos — ¡agrega uno con el botón +!
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </SortableContext>
         </table>
+        </DndContext>
       </div>
       {reorderError && (
         <Toast message={reorderError} durationMs={3000} onTimeout={() => setReorderError(null)} />

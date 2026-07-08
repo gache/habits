@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { pad, getDaysInMonth, habitDaysElapsed, habitPeriodsElapsed, calcStreak, calcBestStreak, periodBounds, isPeriodLocked, isWeekday, countCompletedPeriods } from '../date-utils'
+import { pad, getDaysInMonth, habitDaysElapsed, habitPeriodsElapsed, calcStreak, calcBestStreak, periodBounds, isPeriodLocked, isWeekday, countCompletedPeriods, weekChunks } from '../date-utils'
 
 describe('pad', () => {
   it('pads single digits with a leading zero', () => {
@@ -129,6 +129,25 @@ describe('countCompletedPeriods', () => {
 
   it('counts one per month for monthly habits', () => {
     expect(countCompletedPeriods('monthly', new Set(['2026-07-05']), '2026-07-31')).toBe(1)
+  })
+})
+
+describe('weekChunks', () => {
+  it('splits a month into ISO-week chunks, clipped to days in that month', () => {
+    // July 2026: Jul 1 is Wednesday, so week 1 is just Jul 1-5 (Mon 29 Jun-Sun 5
+    // Jul, clipped to July's own days), then full Mon-Sun weeks, then a
+    // trailing partial week for Jul 27-31.
+    const days = Array.from({ length: 31 }, (_, i) => i + 1)
+    const chunks = weekChunks('2026-07', days)
+    expect(chunks[0]).toEqual([1, 2, 3, 4, 5])
+    expect(chunks[1]).toEqual([6, 7, 8, 9, 10, 11, 12])
+    expect(chunks[chunks.length - 1]).toEqual([27, 28, 29, 30, 31])
+  })
+
+  it('keeps every day exactly once across all chunks', () => {
+    const days = Array.from({ length: 30 }, (_, i) => i + 1)
+    const chunks = weekChunks('2026-06', days)
+    expect(chunks.flat()).toEqual(days)
   })
 })
 
