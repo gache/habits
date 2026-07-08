@@ -4,7 +4,7 @@ import { CaretLeft, CaretRight, CalendarBlank, Target, CheckCircle, TrendUp, Sta
 import { useHabits, type Habit } from '@/hooks/useHabits'
 import { useCompletions, useCompletionsForMonths } from '@/hooks/useCompletions'
 import { useMonthlyLog } from '@/hooks/useMonthlyLog'
-import { getDaysInMonth, pad, todayStr, habitDaysElapsed, habitPeriodsElapsed, countCompletedPeriods, weekChunks } from '@/lib/date-utils'
+import { getDaysInMonth, pad, todayStr, habitDaysElapsed, habitPeriodsElapsed, countCompletedPeriods, dayChunks } from '@/lib/date-utils'
 import { getProgressColor, getProgressBg } from '@/lib/progress-color'
 import BestStreaks from '@/components/BestStreaks'
 
@@ -125,7 +125,7 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
 
   // Same narrow-screen treatment as the Tracker grid: show one ISO week at
   // a time so the heatmap and % column fit without horizontal scroll.
-  const chunks = useMemo(() => weekChunks(monthStr, days), [monthStr, days])
+  const chunks = useMemo(() => dayChunks(days), [days])
   const [mobileWeekIndex, setMobileWeekIndex] = useState(0)
   const [prevMonthStr, setPrevMonthStr] = useState(monthStr)
   if (monthStr !== prevMonthStr) {

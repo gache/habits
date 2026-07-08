@@ -14,7 +14,7 @@ import { type Habit, useReorderHabits } from '@/hooks/useHabits'
 import { type Completion } from '@/hooks/useCompletions'
 import HabitRow from './HabitRow'
 import Toast from './Toast'
-import { getDaysInMonth, pad, todayStr, weekChunks } from '@/lib/date-utils'
+import { getDaysInMonth, pad, todayStr, dayChunks } from '@/lib/date-utils'
 import { reorderHabits } from '@/lib/reorder'
 
 interface HabitGridProps {
@@ -47,7 +47,7 @@ export default function HabitGrid({ habits, year, month, completions, isError, o
   const [reorderError, setReorderError] = useState<string | null>(null)
   const reorderMutation = useReorderHabits()
 
-  const chunks = useMemo(() => weekChunks(monthStr, days), [monthStr, days])
+  const chunks = useMemo(() => dayChunks(days), [days])
   // Same render-time-adjustment pattern: re-pick the default week only when
   // the month itself changes, not on every chunk recompute (which would
   // fight the user's manual nav).

@@ -126,19 +126,19 @@ export function countCompletedPeriods(
 }
 
 /**
- * Groups a month's day numbers into ISO-week (Monday-Sunday) chunks — used
- * to show just one week at a time on narrow screens, so a day grid and its
- * total column fit without horizontal scroll.
+ * Groups a month's day numbers into fixed-size pages (5 days by default) —
+ * used to show just one page at a time on narrow screens, so a day grid and
+ * its total column fit without horizontal scroll. Fixed-size (rather than
+ * ISO-week) chunks keep every page the same width — an ISO week can be 5
+ * days (a partial week at the start/end of a month) or 7, and the wider
+ * 7-day pages didn't fit as comfortably as the 5-day ones.
  */
-export function weekChunks(monthStr: string, days: number[]): number[][] {
-  const groups = new Map<string, number[]>()
-  for (const day of days) {
-    const dateStr = `${monthStr}-${pad(day)}`
-    const [mondayKey] = periodBounds('weekly', dateStr)!
-    if (!groups.has(mondayKey)) groups.set(mondayKey, [])
-    groups.get(mondayKey)!.push(day)
+export function dayChunks(days: number[], size = 5): number[][] {
+  const chunks: number[][] = []
+  for (let i = 0; i < days.length; i += size) {
+    chunks.push(days.slice(i, i + size))
   }
-  return [...groups.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([, v]) => v)
+  return chunks
 }
 
 /**
