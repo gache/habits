@@ -168,8 +168,9 @@ export default function AddHabitModal({ onClose, editing, onSaved }: AddHabitMod
               )}
             </div>
             <div className="flex-1">
-              <label className="block text-xs text-cream-600 mb-1">Nombre *</label>
+              <label htmlFor="habit-name" className="block text-xs text-cream-600 mb-1">Nombre *</label>
               <input
+                id="habit-name"
                 ref={nameInputRef}
                 required
                 value={form.name}
@@ -181,8 +182,9 @@ export default function AddHabitModal({ onClose, editing, onSaved }: AddHabitMod
           </div>
 
           <div>
-            <label className="block text-xs text-cream-600 mb-1">Descripción</label>
+            <label htmlFor="habit-description" className="block text-xs text-cream-600 mb-1">Descripción</label>
             <input
+              id="habit-description"
               value={form.description ?? ''}
               onChange={(e) => set('description', e.target.value)}
               placeholder="ej. 8 vasos"
@@ -191,8 +193,9 @@ export default function AddHabitModal({ onClose, editing, onSaved }: AddHabitMod
           </div>
 
           <div>
-            <label className="block text-xs text-cream-600 mb-1">Frecuencia</label>
+            <label htmlFor="habit-frequency" className="block text-xs text-cream-600 mb-1">Frecuencia</label>
             <select
+              id="habit-frequency"
               value={form.frequency}
               onChange={(e) => set('frequency', e.target.value)}
               className="w-full border border-cream-300 rounded px-2 py-1.5 text-sm bg-cream-100 focus:outline-none focus:ring-2 focus:ring-cream-400 focus:ring-offset-1 focus:border-cream-400"
