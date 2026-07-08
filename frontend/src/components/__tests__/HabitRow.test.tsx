@@ -112,6 +112,24 @@ describe('HabitRow', () => {
     expect(screen.getByText(/Racha: 2 días/)).toBeInTheDocument()
   })
 
+  it('counts a streak that started last month using streakCompletions, not the month-scoped completions', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 6, 1)) // July 1st
+    // completions is scoped to July only (as the real month-fetched prop
+    // would be) — it alone can't see the June 30th completion that keeps
+    // the streak alive across the boundary.
+    const completions: Completion[] = [
+      { id: 'c1', habit_id: 'h1', date: '2026-07-01', created_at: null },
+    ]
+    const streakCompletions: Completion[] = [
+      { id: 'c0', habit_id: 'h1', date: '2026-06-30', created_at: null },
+      ...completions,
+    ]
+    renderRow(makeHabit(), { completions, streakCompletions, today: '2026-07-01' })
+    vi.useRealTimers()
+    expect(screen.getByText(/Racha: 2 días/)).toBeInTheDocument()
+  })
+
   it('opens the edit modal when the edit button is clicked', () => {
     renderRow(makeHabit())
     fireEvent.click(screen.getByLabelText('Editar Leer'))

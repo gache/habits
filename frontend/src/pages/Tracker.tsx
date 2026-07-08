@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plant, Sun, Moon, CalendarBlank, Plus, SignOut, Heart } from '@phosphor-icons/react'
 import { signOut } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
 import { useHabits } from '@/hooks/useHabits'
-import { useCompletions, useToggleCompletion } from '@/hooks/useCompletions'
+import { useCompletions, useCompletionsForMonths, useToggleCompletion } from '@/hooks/useCompletions'
 import { useMonthlyLog, useUpdateMonthlyLog } from '@/hooks/useMonthlyLog'
 import MonthNav from '@/components/MonthNav'
 import HabitGrid from '@/components/HabitGrid'
@@ -13,7 +13,7 @@ import MonthlyLog from '@/components/MonthlyLog'
 import AddHabitModal from '@/components/AddHabitModal'
 import BestStreaks from '@/components/BestStreaks'
 import Toast from '@/components/Toast'
-import { pad, getDaysInMonth, todayStr, habitDaysElapsed, habitPeriodsElapsed, countCompletedPeriods } from '@/lib/date-utils'
+import { pad, getDaysInMonth, todayStr, habitDaysElapsed, habitPeriodsElapsed, countCompletedPeriods, recentMonthStrs } from '@/lib/date-utils'
 import { getProgressColor } from '@/lib/progress-color'
 
 const DEMO = import.meta.env.VITE_DEMO_MODE === 'true'
@@ -35,6 +35,12 @@ export default function Tracker() {
   const monthStr = `${year}-${pad(month)}`
   const { data: habits = [], isLoading: habitsLoading, isError: habitsError } = useHabits(true)
   const { data: completions = [] } = useCompletions(monthStr)
+  // Widened window (not just the displayed month) so a per-habit streak
+  // that crosses a month boundary — e.g. started the 28th, still going on
+  // the 1st — doesn't look broken or reset to 0 just because June's
+  // completions aren't in the July-scoped `completions` fetch above.
+  const streakMonths = useMemo(() => recentMonthStrs(12), [])
+  const { data: streakCompletions = [] } = useCompletionsForMonths(streakMonths)
   const { data: log } = useMonthlyLog(monthStr)
   const updateLog = useUpdateMonthlyLog(monthStr)
   const { toggle } = useToggleCompletion(monthStr)
@@ -178,6 +184,7 @@ export default function Tracker() {
               year={year}
               month={month}
               completions={completions}
+              streakCompletions={streakCompletions}
               isError={habitsError}
               onToggle={toggle}
             />

@@ -22,11 +22,15 @@ interface HabitGridProps {
   year: number
   month: number // 1-based
   completions: Completion[]
+  /** Wider-than-the-displayed-month completions, used only for streak
+   * calculations so they don't break at month boundaries. Defaults to
+   * `completions` if not given (e.g. in tests that don't care about streaks). */
+  streakCompletions?: Completion[]
   isError?: boolean
   onToggle: (habitId: string, date: string, isCompleted: boolean) => void
 }
 
-export default function HabitGrid({ habits, year, month, completions, isError, onToggle }: HabitGridProps) {
+export default function HabitGrid({ habits, year, month, completions, streakCompletions, isError, onToggle }: HabitGridProps) {
   const daysInMonth = getDaysInMonth(year, month)
   const days = useMemo(() => Array.from({ length: daysInMonth }, (_, i) => i + 1), [daysInMonth])
   const monthStr = `${year}-${pad(month)}`
@@ -159,6 +163,7 @@ export default function HabitGrid({ habits, year, month, completions, isError, o
                   today={today}
                   totalDays={daysElapsed}
                   completions={completions}
+                  streakCompletions={streakCompletions}
                   showStreak={isCurrentMonth}
                   mobileVisibleDays={mobileVisibleDays}
                   onToggle={onToggle}

@@ -15,6 +15,21 @@ export function todayStr(): string {
 }
 
 /**
+ * "YYYY-MM" for the current month and the `count - 1` months before it,
+ * most recent first — used to fetch enough completion history for
+ * calcStreak/calcBestStreak to see across month boundaries instead of just
+ * the single month currently on screen (a streak that started last month
+ * would otherwise look broken or shorter than it really is on the 1st).
+ */
+export function recentMonthStrs(count: number): string[] {
+  const today = new Date()
+  return Array.from({ length: count }, (_, i) => {
+    const d = new Date(today.getFullYear(), today.getMonth() - i, 1)
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`
+  })
+}
+
+/**
  * Days a habit could have been completed within a given month, capped to
  * daysElapsed. Any day up to today can be backfilled regardless of the
  * exact day the habit was created — this only zeroes out months entirely

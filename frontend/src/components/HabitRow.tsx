@@ -23,13 +23,18 @@ interface HabitRowProps {
   today: string       // "YYYY-MM-DD"
   totalDays: number   // days elapsed (for progress bar)
   completions: Completion[]
+  /** Wider-than-the-displayed-month completions, used only for streak
+   * calculations so a streak crossing a month boundary isn't undercounted.
+   * Falls back to `completions` when not given (e.g. in tests that don't
+   * care about cross-month streak behavior). */
+  streakCompletions?: Completion[]
   showStreak?: boolean
   /** Day-of-month numbers visible below the `sm` breakpoint (current mobile week). */
   mobileVisibleDays: Set<number>
   onToggle: (habitId: string, date: string, isCompleted: boolean) => void
 }
 
-export default function HabitRow({ habit, days, monthStr, today, totalDays, completions, showStreak = true, mobileVisibleDays, onToggle }: HabitRowProps) {
+export default function HabitRow({ habit, days, monthStr, today, totalDays, completions, streakCompletions, showStreak = true, mobileVisibleDays, onToggle }: HabitRowProps) {
   const [editing, setEditing] = useState(false)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -43,14 +48,20 @@ export default function HabitRow({ habit, days, monthStr, today, totalDays, comp
   const completedDates = new Set(
     completions.filter((c) => c.habit_id === habit.id).map((c) => c.date),
   )
+  // Streaks need to see past month boundaries — completedDates above is
+  // scoped to the displayed month only, which would make an ongoing streak
+  // look broken or reset to 0 right after nav'ing to a new month.
+  const streakDates = new Set(
+    (streakCompletions ?? completions).filter((c) => c.habit_id === habit.id).map((c) => c.date),
+  )
 
   const total = completedDates.size
-  const streak = calcStreak(completedDates)
+  const streak = calcStreak(streakDates)
   const streakLevel = showStreak ? getStreakLevel(streak) : null
   // Celebration triggers off the best run ever logged, not just the streak
   // ending today — backfilling an old 3-in-a-row (now that any past day can
   // be checked) is just as worth celebrating as building one in real time.
-  const bestStreak = calcBestStreak(completedDates)
+  const bestStreak = calcBestStreak(streakDates)
 
   useEffect(() => {
     if (!showStreak) return
