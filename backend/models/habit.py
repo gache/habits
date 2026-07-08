@@ -6,7 +6,7 @@ from datetime import datetime
 class HabitCreate(BaseModel):
     name: str
     description: Optional[str] = None
-    frequency: str = "daily"  # "daily" | "weekly" | "monthly"
+    frequency: str = "daily"  # "daily" | "weekly" | "monthly" | "weekend"
     active: bool = True
     icon: str = "⭐"
     color: str = "#d4c4a8"

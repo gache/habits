@@ -4,7 +4,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from ..auth import get_current_uid
-from ..date_utils import is_weekday, period_bounds
+from ..date_utils import is_weekday, is_weekend, period_bounds
 from ..firebase import get_db
 from ..models.completion import CompletionCreate, CompletionOut
 
@@ -42,9 +42,14 @@ def mark_complete(
             status_code=422,
             detail="Este hábito solo se puede marcar de lunes a viernes.",
         )
+    if frequency == "weekend" and not is_weekend(body.date):
+        raise HTTPException(
+            status_code=422,
+            detail="Este hábito solo se puede marcar sábado o domingo.",
+        )
 
-    # Weekly habits allow a check on any weekday (Mon-Fri) in the same week —
-    # only monthly enforces one check per period.
+    # Weekly/weekend habits allow a check on any eligible day in the same
+    # week — only monthly enforces one check per period.
     bounds = period_bounds(frequency, body.date) if frequency == "monthly" else None
     if bounds:
         start, end = bounds

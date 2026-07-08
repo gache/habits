@@ -50,6 +50,27 @@ def test_weekly_habit_allows_check_in_next_week_chunk(client):
     assert r.status_code == 201
 
 
+def test_weekend_habit_allows_multiple_checks_same_week(client):
+    habit = client.post("/api/habits", json={"name": "Findesemana", "frequency": "weekend"}).json()
+    r1 = client.post(f"/api/habits/{habit['id']}/complete", json={"date": "2026-07-04"})  # Saturday
+    assert r1.status_code == 201
+    r2 = client.post(f"/api/habits/{habit['id']}/complete", json={"date": "2026-07-05"})  # Sunday, same week
+    assert r2.status_code == 201
+
+
+def test_weekend_habit_rejects_weekday_dates(client):
+    habit = client.post("/api/habits", json={"name": "Findesemana", "frequency": "weekend"}).json()
+    r = client.post(f"/api/habits/{habit['id']}/complete", json={"date": "2026-07-02"})  # Thursday
+    assert r.status_code == 422
+
+
+def test_weekend_habit_allows_check_in_next_week_chunk(client):
+    habit = client.post("/api/habits", json={"name": "Findesemana", "frequency": "weekend"}).json()
+    client.post(f"/api/habits/{habit['id']}/complete", json={"date": "2026-07-04"})
+    r = client.post(f"/api/habits/{habit['id']}/complete", json={"date": "2026-07-11"})
+    assert r.status_code == 201
+
+
 def test_monthly_habit_rejects_second_check_same_month(client):
     habit = client.post("/api/habits", json={"name": "Mensual", "frequency": "monthly"}).json()
     r1 = client.post(f"/api/habits/{habit['id']}/complete", json={"date": "2026-07-05"})

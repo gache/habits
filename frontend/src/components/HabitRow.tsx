@@ -9,7 +9,7 @@ import AddHabitModal from './AddHabitModal'
 import ConfirmDialog from './ConfirmDialog'
 import StreakCelebration from './StreakCelebration'
 import Toast from './Toast'
-import { pad, calcStreak, calcBestStreak, habitDaysElapsed, habitPeriodsElapsed, countCompletedPeriods, isPeriodLocked, isWeekday } from '@/lib/date-utils'
+import { pad, calcStreak, calcBestStreak, habitDaysElapsed, habitPeriodsElapsed, countCompletedPeriods, isPeriodLocked, isWeekday, isWeekend } from '@/lib/date-utils'
 import { getStreakLevel, type StreakLevel } from '@/lib/streak-levels'
 import { FREQUENCY_LABELS, FREQUENCY_BADGE_STYLES } from '@/lib/habit-presets'
 
@@ -232,9 +232,10 @@ export default function HabitRow({ habit, days, monthStr, today, totalDays, comp
           const completed = completedDates.has(dateStr)
           const isFutureUncompleted = dateStr > today && !completed
           const isWeekendOnWeekly = !completed && habit.frequency === 'weekly' && !isWeekday(dateStr)
-          const periodLocked = !isFutureUncompleted && !isWeekendOnWeekly && isPeriodLocked(habit.frequency, dateStr, completedDates)
-          const isDisabled = isFutureUncompleted || isWeekendOnWeekly || periodLocked
-          const disabledReason = isFutureUncompleted ? 'future' : isWeekendOnWeekly ? 'weekend' : 'period-locked'
+          const isWeekdayOnWeekend = !completed && habit.frequency === 'weekend' && !isWeekend(dateStr)
+          const periodLocked = !isFutureUncompleted && !isWeekendOnWeekly && !isWeekdayOnWeekend && isPeriodLocked(habit.frequency, dateStr, completedDates)
+          const isDisabled = isFutureUncompleted || isWeekendOnWeekly || isWeekdayOnWeekend || periodLocked
+          const disabledReason = isFutureUncompleted ? 'future' : isWeekendOnWeekly ? 'weekend' : isWeekdayOnWeekend ? 'weekday' : 'period-locked'
           return (
             <DayCell
               key={day}

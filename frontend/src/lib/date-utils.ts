@@ -38,12 +38,12 @@ export function habitDaysElapsed(
  * it's at ~3%.
  */
 export function habitPeriodsElapsed(
-  frequency: 'daily' | 'weekly' | 'monthly',
+  frequency: 'daily' | 'weekly' | 'monthly' | 'weekend',
   daysElapsed: number,
 ): number {
   if (daysElapsed <= 0) return 0
   if (frequency === 'monthly') return 1
-  if (frequency === 'weekly') return Math.ceil(daysElapsed / 7)
+  if (frequency === 'weekly' || frequency === 'weekend') return Math.ceil(daysElapsed / 7)
   return daysElapsed
 }
 
@@ -55,24 +55,29 @@ export function isWeekday(date: string): boolean {
   return day >= 1 && day <= 5
 }
 
+/** Whether `date` ("YYYY-MM-DD") falls on Saturday or Sunday. */
+export function isWeekend(date: string): boolean {
+  return !isWeekday(date)
+}
+
 /**
  * Inclusive [start, end] date-string bounds for the period containing
  * `date`, for frequencies that only allow one completion per period.
- * Weekly uses the real ISO calendar week (Monday-Sunday) — weekly habits
- * are only checkable Monday-Friday (see isWeekday), so the period must
- * span the actual week those weekdays belong to — mirrors
- * backend/date_utils.py. Returns null for "daily", which has no period
- * restriction.
+ * Weekly and weekend both use the real ISO calendar week (Monday-Sunday)
+ * — weekly habits are only checkable Monday-Friday (see isWeekday) and
+ * weekend habits only Saturday-Sunday (see isWeekend), so the period must
+ * span the actual week those days belong to — mirrors backend/date_utils.py.
+ * Returns null for "daily", which has no period restriction.
  */
 export function periodBounds(
-  frequency: 'daily' | 'weekly' | 'monthly',
+  frequency: 'daily' | 'weekly' | 'monthly' | 'weekend',
   date: string, // "YYYY-MM-DD"
 ): [string, string] | null {
   if (frequency === 'monthly') {
     const month = date.slice(0, 7)
     return [`${month}-01`, `${month}-32`]
   }
-  if (frequency === 'weekly') {
+  if (frequency === 'weekly' || frequency === 'weekend') {
     const d = new Date(`${date}T00:00:00`)
     const dayOfWeek = d.getDay() // 0=Sun .. 6=Sat
     const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
@@ -93,7 +98,7 @@ export function periodBounds(
  * check on any weekday (Mon-Fri, see isWeekday) within the same week.
  */
 export function isPeriodLocked(
-  frequency: 'daily' | 'weekly' | 'monthly',
+  frequency: 'daily' | 'weekly' | 'monthly' | 'weekend',
   date: string,
   completedDates: Set<string>,
 ): boolean {
@@ -115,7 +120,7 @@ export function isPeriodLocked(
  * represents one fulfilled week.
  */
 export function countCompletedPeriods(
-  frequency: 'daily' | 'weekly' | 'monthly',
+  frequency: 'daily' | 'weekly' | 'monthly' | 'weekend',
   completedDates: Set<string>,
   today: string,
 ): number {

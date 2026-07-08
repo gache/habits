@@ -5,7 +5,7 @@ interface DayCellProps {
   color: string
   isToday: boolean
   disabled?: boolean // future date, weekend on a weekly habit, or period already fulfilled
-  disabledReason?: 'future' | 'period-locked' | 'weekend'
+  disabledReason?: 'future' | 'period-locked' | 'weekend' | 'weekday'
   dateLabel: string  // e.g. "2025-06-15" — for aria-label
   /** Hidden below the `sm` breakpoint — used to show only the current week on narrow screens. */
   hiddenOnMobile?: boolean
@@ -16,6 +16,7 @@ const DISABLED_TITLE = {
   future: 'No se puede completar una fecha futura',
   'period-locked': 'Este hábito ya tiene un check en este período',
   weekend: 'Este hábito solo se puede marcar de lunes a viernes',
+  weekday: 'Este hábito solo se puede marcar sábado o domingo',
 }
 
 export default function DayCell({ completed, color, isToday, disabled, disabledReason = 'future', dateLabel, hiddenOnMobile, onClick }: DayCellProps) {

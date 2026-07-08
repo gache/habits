@@ -5,17 +5,19 @@ export interface HabitPreset {
   color: string
 }
 
-export const FREQUENCY_LABELS: Record<'daily' | 'weekly' | 'monthly', string> = {
+export const FREQUENCY_LABELS: Record<'daily' | 'weekly' | 'monthly' | 'weekend', string> = {
   daily: 'Diaria',
   weekly: 'Semanal',
   monthly: 'Mensual',
+  weekend: 'Fin de Semana',
 }
 
 /** Eye-catching badge colors per frequency — one glance tells the category apart. */
-export const FREQUENCY_BADGE_STYLES: Record<'daily' | 'weekly' | 'monthly', string> = {
+export const FREQUENCY_BADGE_STYLES: Record<'daily' | 'weekly' | 'monthly' | 'weekend', string> = {
   daily: 'bg-sage-100 text-sage-700 dark:bg-sage-900/40 dark:text-sage-300',
   weekly: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
   monthly: 'bg-terracotta-100 text-terracotta-700 dark:bg-terracotta-900/40 dark:text-terracotta-300',
+  weekend: 'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300',
 }
 
 /** Quick-pick suggestions shown when creating a new habit — each with a color that fits the habit. */

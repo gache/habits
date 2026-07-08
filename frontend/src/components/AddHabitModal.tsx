@@ -16,7 +16,7 @@ const PRESET_COLORS = [
   '#c8d8f0', '#f0b8c8', '#c8e8d8', '#d8f0b8', '#e8c8f0', '#c8e0f0',
 ]
 
-const FREQUENCIES = ['daily', 'weekly', 'monthly'] as const
+const FREQUENCIES = ['daily', 'weekly', 'monthly', 'weekend'] as const
 
 export default function AddHabitModal({ onClose, editing, onSaved }: AddHabitModalProps) {
   const createHabit = useCreateHabit()

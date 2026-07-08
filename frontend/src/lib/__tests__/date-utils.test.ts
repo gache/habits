@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { pad, getDaysInMonth, habitDaysElapsed, habitPeriodsElapsed, calcStreak, calcBestStreak, periodBounds, isPeriodLocked, isWeekday, countCompletedPeriods, dayChunks } from '../date-utils'
+import { pad, getDaysInMonth, habitDaysElapsed, habitPeriodsElapsed, calcStreak, calcBestStreak, periodBounds, isPeriodLocked, isWeekday, isWeekend, countCompletedPeriods, dayChunks } from '../date-utils'
 
 describe('pad', () => {
   it('pads single digits with a leading zero', () => {
@@ -60,6 +60,11 @@ describe('habitPeriodsElapsed', () => {
     expect(habitPeriodsElapsed('weekly', 15)).toBe(3)
   })
 
+  it('weekend counts elapsed 7-day chunks same as weekly', () => {
+    expect(habitPeriodsElapsed('weekend', 7)).toBe(1)
+    expect(habitPeriodsElapsed('weekend', 8)).toBe(2)
+  })
+
   it('monthly is a single period regardless of how many days elapsed', () => {
     expect(habitPeriodsElapsed('monthly', 1)).toBe(1)
     expect(habitPeriodsElapsed('monthly', 31)).toBe(1)
@@ -81,6 +86,11 @@ describe('periodBounds', () => {
     expect(periodBounds('weekly', '2026-07-05')).toEqual(['2026-06-29', '2026-07-05']) // Sunday
     expect(periodBounds('weekly', '2026-07-06')).toEqual(['2026-07-06', '2026-07-12']) // Monday
   })
+
+  it('spans the real ISO week (Monday-Sunday) for weekend, same as weekly', () => {
+    expect(periodBounds('weekend', '2026-07-04')).toEqual(['2026-06-29', '2026-07-05']) // Saturday
+    expect(periodBounds('weekend', '2026-07-05')).toEqual(['2026-06-29', '2026-07-05']) // Sunday
+  })
 })
 
 describe('isWeekday', () => {
@@ -95,6 +105,18 @@ describe('isWeekday', () => {
   })
 })
 
+describe('isWeekend', () => {
+  it('is true for Saturday and Sunday', () => {
+    expect(isWeekend('2026-07-04')).toBe(true) // Saturday
+    expect(isWeekend('2026-07-05')).toBe(true) // Sunday
+  })
+
+  it('is false for Monday through Friday', () => {
+    expect(isWeekend('2026-07-06')).toBe(false) // Monday
+    expect(isWeekend('2026-07-10')).toBe(false) // Friday
+  })
+})
+
 describe('isPeriodLocked', () => {
   it('is never locked for daily habits', () => {
     expect(isPeriodLocked('daily', '2026-07-05', new Set(['2026-07-01']))).toBe(false)
@@ -103,6 +125,10 @@ describe('isPeriodLocked', () => {
   it('never locks a weekly habit — any weekday in the week stays available', () => {
     expect(isPeriodLocked('weekly', '2026-07-02', new Set(['2026-07-02']))).toBe(false)
     expect(isPeriodLocked('weekly', '2026-07-03', new Set(['2026-07-02']))).toBe(false)
+  })
+
+  it('never locks a weekend habit — both Saturday and Sunday stay available', () => {
+    expect(isPeriodLocked('weekend', '2026-07-05', new Set(['2026-07-04']))).toBe(false)
   })
 
   it('locks the whole month for a monthly habit', () => {
@@ -121,6 +147,10 @@ describe('countCompletedPeriods', () => {
 
   it('counts separate weeks individually', () => {
     expect(countCompletedPeriods('weekly', new Set(['2026-07-02', '2026-07-08']), '2026-07-31')).toBe(2)
+  })
+
+  it('collapses a Saturday+Sunday weekend check into one period', () => {
+    expect(countCompletedPeriods('weekend', new Set(['2026-07-04', '2026-07-05']), '2026-07-31')).toBe(1)
   })
 
   it('excludes dates after today', () => {

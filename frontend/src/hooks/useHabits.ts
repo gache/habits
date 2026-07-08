@@ -5,7 +5,7 @@ export interface Habit {
   id: string
   name: string
   description: string | null
-  frequency: 'daily' | 'weekly' | 'monthly'
+  frequency: 'daily' | 'weekly' | 'monthly' | 'weekend'
   active: boolean
   icon: string
   color: string
@@ -17,7 +17,7 @@ export interface Habit {
 export interface HabitCreate {
   name: string
   description?: string
-  frequency?: 'daily' | 'weekly' | 'monthly'
+  frequency?: 'daily' | 'weekly' | 'monthly' | 'weekend'
   active?: boolean
   icon?: string
   color?: string
