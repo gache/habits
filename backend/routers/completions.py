@@ -53,13 +53,14 @@ def mark_complete(
     bounds = period_bounds(frequency, body.date) if frequency == "monthly" else None
     if bounds:
         start, end = bounds
-        clashing = (
-            completions_ref.where("habit_id", "==", habit_id)
-            .where("date", ">=", start)
-            .where("date", "<=", end)
-            .limit(1)
-            .get()
-        )
+        # Filter by habit_id only in Firestore (a single equality filter
+        # needs no composite index) and check the date range in Python —
+        # combining habit_id== with a date range in the same query requires
+        # a composite index that doesn't exist in prod, which threw an
+        # unhandled FailedPrecondition (surfaced to the browser as a CORS
+        # error, since the 500 response bypassed the CORS middleware).
+        habit_completions = completions_ref.where("habit_id", "==", habit_id).get()
+        clashing = [d for d in habit_completions if start <= d.to_dict()["date"] <= end]
         if clashing:
             raise HTTPException(
                 status_code=409,
