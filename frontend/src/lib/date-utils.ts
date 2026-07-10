@@ -1,5 +1,10 @@
 /** Shared date helpers — used by HabitRow, HabitGrid, WeeklyProgress, Tracker */
 
+export type Frequency = 'daily' | 'weekly' | 'monthly' | 'weekend'
+
+/** The app has no data before this month — nothing older is ever fetched or shown. */
+export const APP_START_MONTH = '2026-01'
+
 export function pad(n: number): string {
   return n.toString().padStart(2, '0')
 }
@@ -17,16 +22,21 @@ export function todayStr(): string {
 /**
  * "YYYY-MM" for the current month and the `count - 1` months before it,
  * most recent first — used to fetch enough completion history for
- * calcStreak/calcBestStreak to see across month boundaries instead of just
- * the single month currently on screen (a streak that started last month
- * would otherwise look broken or shorter than it really is on the 1st).
+ * calcPeriodStreak/calcBestPeriodStreak to see across month boundaries
+ * instead of just the single month currently on screen (a streak that
+ * started last month would otherwise look broken or shorter than it
+ * really is on the 1st).
  */
 export function recentMonthStrs(count: number): string[] {
   const today = new Date()
-  return Array.from({ length: count }, (_, i) => {
+  const months: string[] = []
+  for (let i = 0; i < count; i++) {
     const d = new Date(today.getFullYear(), today.getMonth() - i, 1)
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`
-  })
+    const monthStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}`
+    if (monthStr < APP_START_MONTH) break
+    months.push(monthStr)
+  }
+  return months
 }
 
 /**
@@ -34,15 +44,20 @@ export function recentMonthStrs(count: number): string[] {
  * daysElapsed. Any day up to today can be backfilled regardless of the
  * exact day the habit was created — this only zeroes out months entirely
  * outside the habit's lifetime (e.g. viewing a month before it existed).
+ * `hasCompletions` overrides that zeroing: the backend allows marking any
+ * past date without checking `created_at`, so a habit can genuinely have
+ * completions in a month before its own creation month (backfilled at
+ * creation time) — when that happens, trust the data over the metadata.
  */
 export function habitDaysElapsed(
   createdAt: string | null,
   monthStr: string, // "YYYY-MM"
   daysElapsed: number,
+  hasCompletions = false,
 ): number {
   if (!createdAt) return daysElapsed
   const createdMonth = createdAt.slice(0, 7)
-  return createdMonth <= monthStr ? daysElapsed : 0
+  return createdMonth <= monthStr || hasCompletions ? daysElapsed : 0
 }
 
 /**
@@ -53,7 +68,7 @@ export function habitDaysElapsed(
  * it's at ~3%.
  */
 export function habitPeriodsElapsed(
-  frequency: 'daily' | 'weekly' | 'monthly' | 'weekend',
+  frequency: Frequency,
   daysElapsed: number,
 ): number {
   if (daysElapsed <= 0) return 0
@@ -85,7 +100,7 @@ export function isWeekend(date: string): boolean {
  * Returns null for "daily", which has no period restriction.
  */
 export function periodBounds(
-  frequency: 'daily' | 'weekly' | 'monthly' | 'weekend',
+  frequency: Frequency,
   date: string, // "YYYY-MM-DD"
 ): [string, string] | null {
   if (frequency === 'monthly') {
@@ -113,7 +128,7 @@ export function periodBounds(
  * check on any weekday (Mon-Fri, see isWeekday) within the same week.
  */
 export function isPeriodLocked(
-  frequency: 'daily' | 'weekly' | 'monthly' | 'weekend',
+  frequency: Frequency,
   date: string,
   completedDates: Set<string>,
 ): boolean {
@@ -135,7 +150,7 @@ export function isPeriodLocked(
  * represents one fulfilled week.
  */
 export function countCompletedPeriods(
-  frequency: 'daily' | 'weekly' | 'monthly' | 'weekend',
+  frequency: Frequency,
   completedDates: Set<string>,
   today: string,
 ): number {
@@ -162,41 +177,94 @@ export function dayChunks(days: number[], size = 5): number[][] {
 }
 
 /**
- * Current streak: how many consecutive days ending on or before today
- * have a completion for this habit.
+ * Reduces a date to the key identifying its period under `frequency` —
+ * the date itself for daily (each day is its own period), and the Monday
+ * of its ISO week for weekly/weekend (both use the same weekly cadence,
+ * just on different eligible days). Used to turn a set of raw completion
+ * dates into a set of *periods* before counting streaks, so a weekly habit
+ * checked on both Monday and Wednesday of the same week still only counts
+ * as one period toward the streak.
  */
-export function calcStreak(completedDates: Set<string>): number {
-  const d = new Date()
-  const todayKey = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
-  // Today isn't over yet — if it's not done, don't zero out an otherwise-alive
-  // streak; start counting from yesterday and only break if that's missing too.
-  if (!completedDates.has(todayKey)) d.setDate(d.getDate() - 1)
+function periodKeyOf(frequency: Frequency, date: string): string {
+  if (frequency === 'monthly') return date.slice(0, 7)
+  if (frequency === 'weekly' || frequency === 'weekend') return periodBounds(frequency, date)![0]
+  return date
+}
 
+/**
+ * Current streak: how many consecutive periods (days for daily, weeks for
+ * weekly/weekend, months for monthly) ending on or before the current one
+ * have a completion for this habit — the frequency-aware generalization of
+ * "how many in a row." A weekly habit only asks for one check per week, so
+ * its streak counts consecutive *weeks* with a check, not consecutive days
+ * (which would almost never line up two weeks in a row).
+ */
+export function calcPeriodStreak(frequency: Frequency, completedDates: Set<string>): number {
+  const periods = new Set([...completedDates].map((d) => periodKeyOf(frequency, d)))
+
+  if (frequency === 'monthly') {
+    const now = new Date()
+    let y = now.getFullYear()
+    let m = now.getMonth() // 0-based
+    const key = () => `${y}-${pad(m + 1)}`
+    const stepBack = () => { m -= 1; if (m < 0) { m = 11; y -= 1 } }
+    // Current period isn't over yet — if it's not done, don't zero out an
+    // otherwise-alive streak; start counting from the previous period and
+    // only break if that's missing too.
+    if (!periods.has(key())) stepBack()
+    let streak = 0
+    while (periods.has(key())) {
+      streak++
+      stepBack()
+    }
+    return streak
+  }
+
+  const stepDays = frequency === 'daily' ? 1 : 7
+  const d = new Date()
+  const key = () => periodKeyOf(frequency, `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`)
+  if (!periods.has(key())) d.setDate(d.getDate() - stepDays)
   let streak = 0
-  while (true) {
-    const key = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
-    if (!completedDates.has(key)) break
+  while (periods.has(key())) {
     streak++
-    d.setDate(d.getDate() - 1)
+    d.setDate(d.getDate() - stepDays)
   }
   return streak
 }
 
 /**
- * Longest run of consecutive-day completions found anywhere in the given
- * dates — unlike calcStreak, doesn't need to end today. Used for lifetime
- * "best streak" records.
+ * Longest run of consecutive periods found anywhere in the given dates —
+ * unlike calcPeriodStreak, doesn't need to end on the current period. Used
+ * for lifetime "best streak" records.
  */
-export function calcBestStreak(completedDates: Set<string>): number {
+export function calcBestPeriodStreak(frequency: Frequency, completedDates: Set<string>): number {
   if (completedDates.size === 0) return 0
-  const sorted = [...completedDates].sort()
+  const periods = [...new Set([...completedDates].map((d) => periodKeyOf(frequency, d)))].sort()
+
+  if (frequency === 'monthly') {
+    let best = 1
+    let run = 1
+    for (let i = 1; i < periods.length; i++) {
+      const [py, pm] = periods[i - 1].split('-').map(Number)
+      const [cy, cm] = periods[i].split('-').map(Number)
+      const monthDiff = (cy - py) * 12 + (cm - pm)
+      run = monthDiff === 1 ? run + 1 : 1
+      best = Math.max(best, run)
+    }
+    return best
+  }
+
+  // daily / weekly / weekend: period keys are real dates (the day itself,
+  // or that week's Monday) — consecutive periods are exactly this many
+  // days apart.
+  const step = frequency === 'daily' ? 1 : 7
   let best = 1
   let run = 1
-  for (let i = 1; i < sorted.length; i++) {
-    const prev = new Date(sorted[i - 1])
-    const curr = new Date(sorted[i])
+  for (let i = 1; i < periods.length; i++) {
+    const prev = new Date(periods[i - 1])
+    const curr = new Date(periods[i])
     const dayDiff = Math.round((curr.getTime() - prev.getTime()) / 86400000)
-    run = dayDiff === 1 ? run + 1 : 1
+    run = dayDiff === step ? run + 1 : 1
     best = Math.max(best, run)
   }
   return best

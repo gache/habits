@@ -4,9 +4,10 @@ import { CaretLeft, CaretRight, CalendarBlank, Target, CheckCircle, TrendUp, Sta
 import { useHabits, type Habit } from '@/hooks/useHabits'
 import { useCompletions, useCompletionsForMonths } from '@/hooks/useCompletions'
 import { useMonthlyLog } from '@/hooks/useMonthlyLog'
-import { getDaysInMonth, pad, todayStr, habitDaysElapsed, habitPeriodsElapsed, countCompletedPeriods, dayChunks } from '@/lib/date-utils'
+import { getDaysInMonth, pad, todayStr, habitDaysElapsed, habitPeriodsElapsed, countCompletedPeriods, dayChunks, APP_START_MONTH } from '@/lib/date-utils'
 import { getProgressColor, getProgressBg } from '@/lib/progress-color'
 import BestStreaks from '@/components/BestStreaks'
+import { visibleHabitsForMonth } from '@/lib/report-utils'
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -20,6 +21,8 @@ function getLast12Months(): { year: number; month: number; label: string }[] {
   const today = new Date()
   for (let i = 0; i < 12; i++) {
     const d = new Date(today.getFullYear(), today.getMonth() - i, 1)
+    const monthStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}`
+    if (monthStr < APP_START_MONTH) break
     result.push({
       year: d.getFullYear(),
       month: d.getMonth() + 1,
@@ -41,18 +44,19 @@ interface MonthCardProps {
 
 function MonthCard({ year, month, habits, isSelected, onClick }: MonthCardProps) {
   const monthStr = `${year}-${pad(month)}`
+  const visibleHabits = visibleHabitsForMonth(habits, monthStr)
   const { data: completions = [] } = useCompletions(monthStr)
   const { data: log } = useMonthlyLog(monthStr)
   const today = todayStr()
   const isCurrentMonth = monthStr === today.slice(0, 7)
   const daysElapsed = isCurrentMonth ? parseInt(today.slice(8), 10) : getDaysInMonth(year, month)
-  const totalPossible = habits.reduce(
-    (sum, h) => sum + habitPeriodsElapsed(h.frequency, habitDaysElapsed(h.created_at, monthStr, daysElapsed)), 0,
-  )
-  const totalCompleted = habits.reduce((sum, h) => {
+  let totalPossible = 0
+  let totalCompleted = 0
+  for (const h of visibleHabits) {
     const dates = new Set(completions.filter((c) => c.habit_id === h.id).map((c) => c.date))
-    return sum + countCompletedPeriods(h.frequency, dates, today)
-  }, 0)
+    totalPossible += habitPeriodsElapsed(h.frequency, habitDaysElapsed(h.created_at, monthStr, daysElapsed, dates.size > 0))
+    totalCompleted += countCompletedPeriods(h.frequency, dates, today)
+  }
   const pct = totalPossible > 0 ? Math.min(100, Math.round((totalCompleted / totalPossible) * 100)) : 0
 
   const color = getProgressColor(pct)
@@ -78,10 +82,13 @@ function MonthCard({ year, month, habits, isSelected, onClick }: MonthCardProps)
 
       {/* Mini bar per habit */}
       <div className="flex flex-col gap-1">
-        {habits.map((h) => {
+        {visibleHabits.map((h) => {
           const dates = new Set(completions.filter((c) => c.habit_id === h.id).map((c) => c.date))
           const done = countCompletedPeriods(h.frequency, dates, today)
-          const effectivePeriods = habitPeriodsElapsed(h.frequency, habitDaysElapsed(h.created_at, monthStr, daysElapsed))
+          const effectivePeriods = habitPeriodsElapsed(
+            h.frequency,
+            habitDaysElapsed(h.created_at, monthStr, daysElapsed, dates.size > 0),
+          )
           const hp = effectivePeriods > 0 ? Math.min(100, Math.round((done / effectivePeriods) * 100)) : 0
           return (
             <div key={h.id} className="flex items-center gap-1.5">
@@ -115,6 +122,7 @@ interface DetailPanelProps {
 
 function DetailPanel({ year, month, habits }: DetailPanelProps) {
   const monthStr = `${year}-${pad(month)}`
+  const visibleHabits = visibleHabitsForMonth(habits, monthStr)
   const { data: completions = [], isLoading } = useCompletions(monthStr)
   const { data: log } = useMonthlyLog(monthStr)
   const daysInMonth = getDaysInMonth(year, month)
@@ -185,13 +193,14 @@ function DetailPanel({ year, month, habits }: DetailPanelProps) {
             </tr>
           </thead>
           <tbody>
-            {habits.map((habit) => {
+            {visibleHabits.map((habit) => {
               const done = new Set(completions.filter((c) => c.habit_id === habit.id).map((c) => c.date))
-              // Only count completions within the habit's actual lifetime, so
-              // pre-creation/future-dated seed data can't inflate the % — and
-              // collapse same-week weekly checks into one fulfilled period.
+              // Collapses same-week weekly checks into one fulfilled period.
               const completedUpToToday = countCompletedPeriods(habit.frequency, done, today)
-              const effectivePeriods = habitPeriodsElapsed(habit.frequency, habitDaysElapsed(habit.created_at, monthStr, daysElapsed))
+              const effectivePeriods = habitPeriodsElapsed(
+                habit.frequency,
+                habitDaysElapsed(habit.created_at, monthStr, daysElapsed, done.size > 0),
+              )
               const pct = effectivePeriods > 0 ? Math.min(100, Math.round((completedUpToToday / effectivePeriods) * 100)) : 0
               return (
                 <tr key={habit.id} className="border-b border-cream-200 dark:border-cream-600">

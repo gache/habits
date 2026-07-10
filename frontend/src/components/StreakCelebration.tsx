@@ -1,19 +1,22 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { type StreakLevel } from '@/lib/streak-levels'
+import { type StreakLevel, periodUnitLabel, getNextStreakLevel } from '@/lib/streak-levels'
+import type { Frequency } from '@/lib/date-utils'
 
 interface StreakCelebrationProps {
   habitName: string
   level: StreakLevel
   streak: number
+  frequency: Frequency
   onDismiss: () => void
 }
 
 const AUTO_DISMISS_MS = 6000
 
-export default function StreakCelebration({ habitName, level, streak, onDismiss }: StreakCelebrationProps) {
+export default function StreakCelebration({ habitName, level, streak, frequency, onDismiss }: StreakCelebrationProps) {
   const [entered, setEntered] = useState(false)
   const Icon = level.icon
+  const nextLevel = getNextStreakLevel(streak, frequency)
 
   useEffect(() => {
     const raf = requestAnimationFrame(() => setEntered(true))
@@ -51,7 +54,7 @@ export default function StreakCelebration({ habitName, level, streak, onDismiss 
           <Icon size={56} weight="fill" color={level.color} aria-hidden="true" />
         </div>
         <p className="font-sans font-extrabold text-3xl sm:text-4xl text-cream-800 dark:text-cream-100">
-          ¡{streak} días seguidos!
+          ¡{streak} {periodUnitLabel(frequency, streak)} seguidos!
         </p>
         <p className="font-handwritten text-cream-500 dark:text-cream-400 text-xl mt-1">
           {level.label} — {habitName}
@@ -59,6 +62,26 @@ export default function StreakCelebration({ habitName, level, streak, onDismiss 
         <p className="font-sans text-cream-700 dark:text-cream-300 text-lg mt-4 leading-relaxed">
           {level.message}
         </p>
+        {nextLevel ? (
+          <div className="w-full mt-5">
+            <div className="flex items-center justify-between text-sm text-cream-600 dark:text-cream-400 mb-1">
+              <span>Próxima meta: {nextLevel.label}</span>
+              <span className="font-sans font-bold tabular-nums">
+                {streak}/{nextLevel.periods} {periodUnitLabel(frequency, nextLevel.periods)}
+              </span>
+            </div>
+            <div className="w-full h-2 rounded-full bg-cream-200 dark:bg-cream-700 overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{ width: `${Math.min(100, (streak / nextLevel.periods) * 100)}%`, backgroundColor: nextLevel.color }}
+              />
+            </div>
+          </div>
+        ) : (
+          <p className="w-full mt-5 font-sans font-bold text-sm" style={{ color: level.color }}>
+            ¡Nivel máximo alcanzado! No hay meta más alta que esta.
+          </p>
+        )}
         <button
           onClick={onDismiss}
           className="mt-6 px-6 h-11 rounded-full bg-terracotta-600 text-cream-50 text-base font-bold hover:bg-terracotta-700 transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-terracotta-400 focus:ring-offset-1"

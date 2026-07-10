@@ -23,6 +23,11 @@ class HabitUpdate(BaseModel):
     order: Optional[int] = None
 
 
+class HabitRestore(BaseModel):
+    month: str  # "YYYY-MM"
+    dates: list[str] = Field(default_factory=list)  # completion dates to recreate
+
+
 class HabitOut(BaseModel):
     id: str
     name: str
@@ -34,3 +39,4 @@ class HabitOut(BaseModel):
     order: int
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
+    excluded_months: list[str] = Field(default_factory=list)

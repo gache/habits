@@ -16,6 +16,13 @@ frontend/*.tsbuildinfo
 __pycache__/
 *.pyc
 .pytest_cache/
+backend/.venv/
+.coverage
+
+# Test output
+frontend/coverage/
+.playwright-mcp/
 
 # Editor / OS
 .DS_Store
+.claude/

@@ -13,13 +13,13 @@ interface WeeklyProgressProps {
 
 function getWeeks(year: number, month: number) {
   const total = getDaysInMonth(year, month)
-  const weeks: { label: string; days: number[] }[] = []
+  const weeks: { weekNum: number; days: number[] }[] = []
   let day = 1
   let weekNum = 1
   while (day <= total) {
     const end = Math.min(day + 6, total)
     weeks.push({
-      label: `SEMANA ${weekNum}`,
+      weekNum,
       days: Array.from({ length: end - day + 1 }, (_, i) => day + i),
     })
     day = end + 1
@@ -54,7 +54,7 @@ export default function WeeklyProgress({ year, month, completions, habits }: Wee
     <div className="mt-6 border-t border-cream-300 dark:border-cream-600 pt-4">
       <h3 className="font-handwritten text-cream-600 dark:text-cream-400 text-lg mb-3 tracking-wide">PROGRESO SEMANAL</h3>
       <div className="flex flex-col gap-2">
-        {weeks.map(({ label, days }) => {
+        {weeks.map(({ weekNum, days }) => {
           let filled = 0
           let possible = 0
           for (const d of days) {
@@ -67,9 +67,14 @@ export default function WeeklyProgress({ year, month, completions, habits }: Wee
           const pct = possible > 0 ? Math.round((filled / possible) * 100) : 0
 
           return (
-            <div key={label} className="flex items-center gap-3">
-              <span className="font-sans text-sm text-cream-600 dark:text-cream-400 w-32 shrink-0">
-                {label} ({days[0]}–{days[days.length - 1]})
+            <div key={weekNum} className="flex items-center gap-3">
+              {/* "SEMANA 1 (1–7)" at w-32 doesn't fit alongside 7 day-dots
+                  and the % on ~320px phones — abbreviate below `sm` instead
+                  of letting the row overflow the page horizontally. */}
+              <span className="font-sans text-sm text-cream-600 dark:text-cream-400 w-14 sm:w-32 shrink-0">
+                <span className="sm:hidden">S{weekNum}</span>
+                <span className="hidden sm:inline">SEMANA {weekNum}</span>
+                {' '}({days[0]}–{days[days.length - 1]})
               </span>
               <div className="flex gap-1">
                 {days.map((day) => {

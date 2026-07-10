@@ -12,6 +12,7 @@ export interface Habit {
   order: number
   created_at: string | null
   updated_at: string | null
+  excluded_months?: string[]
 }
 
 export interface HabitCreate {
@@ -75,12 +76,29 @@ export function useReorderHabits() {
   })
 }
 
+// Cache invalidation deliberately isn't wired into onSuccess here: the
+// caller (HabitRow) keeps rendering the deleted habit's row as an undo
+// toast until the undo window closes, and invalidating `habits` right away
+// would drop it from the parent's filtered list and unmount that toast
+// early, losing the undo option. HabitRow invalidates once the window
+// actually closes (or useRestoreHabit's onSuccess does, on undo).
 export function useDeleteHabit() {
-  const qc = useQueryClient()
-  return useMutation<void, Error, string>({
-    mutationFn: async (id) => {
-      await api.delete(`/api/habits/${id}`)
+  return useMutation<void, Error, { id: string; month: string }>({
+    mutationFn: async ({ id, month }) => {
+      await api.delete(`/api/habits/${id}`, { params: { month } })
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['habits'] }),
+  })
+}
+
+export function useRestoreHabit() {
+  const qc = useQueryClient()
+  return useMutation<void, Error, { id: string; month: string; dates: string[] }>({
+    mutationFn: async ({ id, month, dates }) => {
+      await api.post(`/api/habits/${id}/restore`, { month, dates })
+    },
+    onSuccess: (_data, { month }) => {
+      qc.invalidateQueries({ queryKey: ['habits'] })
+      qc.invalidateQueries({ queryKey: ['completions', month] })
+    },
   })
 }

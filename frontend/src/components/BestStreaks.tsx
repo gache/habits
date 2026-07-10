@@ -1,8 +1,8 @@
 import { Trophy } from '@phosphor-icons/react'
 import { type Habit } from '@/hooks/useHabits'
 import { type Completion } from '@/hooks/useCompletions'
-import { calcBestStreak } from '@/lib/date-utils'
-import { getStreakLevel } from '@/lib/streak-levels'
+import { calcBestPeriodStreak } from '@/lib/date-utils'
+import { getStreakLevel, periodUnitLabel } from '@/lib/streak-levels'
 
 interface BestStreaksProps {
   habits: Habit[]
@@ -14,9 +14,13 @@ export default function BestStreaks({ habits, completions, title = 'MEJORES RACH
   const records = habits
     .map((habit) => {
       const dates = new Set(completions.filter((c) => c.habit_id === habit.id).map((c) => c.date))
-      return { habit, best: calcBestStreak(dates) }
+      const best = calcBestPeriodStreak(habit.frequency, dates)
+      return { habit, best, level: getStreakLevel(best, habit.frequency) }
     })
-    .filter((r) => r.best >= 3)
+    // Only worth showing off once it's reached a real tier — the threshold
+    // for that is frequency-specific (2 periods for weekly/weekend/monthly,
+    // 3 days for daily), so it comes from the level table, not a flat number.
+    .filter((r) => r.level !== null)
     .sort((a, b) => b.best - a.best)
 
   if (records.length === 0) return null
@@ -28,8 +32,7 @@ export default function BestStreaks({ habits, completions, title = 'MEJORES RACH
         {title}
       </h2>
       <div className="flex flex-wrap gap-2">
-        {records.map(({ habit, best }) => {
-          const level = getStreakLevel(best)
+        {records.map(({ habit, best, level }) => {
           const Icon = level?.icon ?? Trophy
           return (
             <div
@@ -41,7 +44,7 @@ export default function BestStreaks({ habits, completions, title = 'MEJORES RACH
                 {habit.icon} {habit.name}
               </span>
               <span className="font-sans text-sm text-cream-700 dark:text-cream-300">
-                {best} días
+                {best} {periodUnitLabel(habit.frequency, best)}
               </span>
             </div>
           )

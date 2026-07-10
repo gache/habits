@@ -157,4 +157,34 @@ describe('HabitRow', () => {
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
     expect(api.delete).not.toHaveBeenCalled()
   })
+
+  it('deletes the habit for the current month as soon as the confirmation is accepted', async () => {
+    // Regression test: this used to be deferred to a client-side 5s
+    // setTimeout, so an F5/nav during the undo window silently cancelled
+    // it — the toast said "eliminado" but no request was ever sent.
+    vi.mocked(api.delete).mockResolvedValue({ data: undefined })
+    renderRow(makeHabit())
+    fireEvent.click(screen.getByLabelText('Eliminar Leer'))
+    fireEvent.click(screen.getByRole('button', { name: 'Eliminar' }))
+    await waitFor(() =>
+      expect(api.delete).toHaveBeenCalledWith('/api/habits/h1', { params: { month: '2026-07' } }),
+    )
+  })
+
+  it('restores the habit and its completions when Deshacer is clicked', async () => {
+    vi.mocked(api.delete).mockResolvedValue({ data: undefined })
+    vi.mocked(api.post).mockResolvedValue({ data: undefined })
+    const completions: Completion[] = [{ id: 'c1', habit_id: 'h1', date: '2026-07-02', created_at: null }]
+    renderRow(makeHabit(), { completions })
+    fireEvent.click(screen.getByLabelText('Eliminar Leer'))
+    fireEvent.click(screen.getByRole('button', { name: 'Eliminar' }))
+    await waitFor(() => expect(api.delete).toHaveBeenCalled())
+    fireEvent.click(screen.getByRole('button', { name: 'Deshacer' }))
+    await waitFor(() =>
+      expect(api.post).toHaveBeenCalledWith('/api/habits/h1/restore', {
+        month: '2026-07',
+        dates: ['2026-07-02'],
+      }),
+    )
+  })
 })

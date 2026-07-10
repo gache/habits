@@ -3,7 +3,7 @@ import { renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import api from '@/lib/api'
-import { useHabits, useCreateHabit, useDeleteHabit, useReorderHabits } from '../useHabits'
+import { useHabits, useCreateHabit, useDeleteHabit, useRestoreHabit, useReorderHabits } from '../useHabits'
 
 vi.mock('@/lib/api', () => ({
   default: {
@@ -59,14 +59,27 @@ describe('useHabits', () => {
     expect(api.post).toHaveBeenCalledWith('/api/habits', { name: 'Meditar' })
   })
 
-  it('deletes a habit via DELETE', async () => {
+  it('deletes a habit for one month via DELETE', async () => {
     vi.mocked(api.delete).mockResolvedValue({ data: undefined })
 
     const { result } = renderHook(() => useDeleteHabit(), { wrapper: wrapper() })
-    result.current.mutate('1')
+    result.current.mutate({ id: '1', month: '2026-07' })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
-    expect(api.delete).toHaveBeenCalledWith('/api/habits/1')
+    expect(api.delete).toHaveBeenCalledWith('/api/habits/1', { params: { month: '2026-07' } })
+  })
+
+  it('restores a habit and its completions for one month via POST', async () => {
+    vi.mocked(api.post).mockResolvedValue({ data: undefined })
+
+    const { result } = renderHook(() => useRestoreHabit(), { wrapper: wrapper() })
+    result.current.mutate({ id: '1', month: '2026-07', dates: ['2026-07-02'] })
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true))
+    expect(api.post).toHaveBeenCalledWith('/api/habits/1/restore', {
+      month: '2026-07',
+      dates: ['2026-07-02'],
+    })
   })
 })
 

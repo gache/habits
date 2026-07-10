@@ -2,15 +2,16 @@ import { useEffect, useState } from 'react'
 import { PencilSimple, Archive, Trash, DotsSixVertical, DotsThreeVertical, CalendarBlank } from '@phosphor-icons/react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { type Habit, useDeleteHabit, useUpdateHabit } from '@/hooks/useHabits'
+import { useQueryClient } from '@tanstack/react-query'
+import { type Habit, useDeleteHabit, useRestoreHabit, useUpdateHabit } from '@/hooks/useHabits'
 import { type Completion } from '@/hooks/useCompletions'
 import DayCell from './DayCell'
 import AddHabitModal from './AddHabitModal'
 import ConfirmDialog from './ConfirmDialog'
 import StreakCelebration from './StreakCelebration'
 import Toast from './Toast'
-import { pad, calcStreak, calcBestStreak, habitDaysElapsed, habitPeriodsElapsed, countCompletedPeriods, isPeriodLocked, isWeekday, isWeekend } from '@/lib/date-utils'
-import { getStreakLevel, type StreakLevel } from '@/lib/streak-levels'
+import { pad, calcPeriodStreak, calcBestPeriodStreak, habitDaysElapsed, habitPeriodsElapsed, countCompletedPeriods, isPeriodLocked, isWeekday, isWeekend } from '@/lib/date-utils'
+import { getStreakLevel, periodUnitLabel, type StreakLevel } from '@/lib/streak-levels'
 import { FREQUENCY_LABELS, FREQUENCY_BADGE_STYLES } from '@/lib/habit-presets'
 
 const celebratedKey = (habitId: string) => `habit-streak-celebrated:${habitId}`
@@ -41,8 +42,11 @@ export default function HabitRow({ habit, days, monthStr, today, totalDays, comp
   const [celebrating, setCelebrating] = useState<{ level: StreakLevel; streak: number } | null>(null)
   const [savedMessage, setSavedMessage] = useState<string | null>(null)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
+  const [pendingRestoreDates, setPendingRestoreDates] = useState<string[]>([])
   const deleteHabit = useDeleteHabit()
+  const restoreHabit = useRestoreHabit()
   const updateHabit = useUpdateHabit()
+  const qc = useQueryClient()
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: habit.id })
 
   const completedDates = new Set(
@@ -56,15 +60,19 @@ export default function HabitRow({ habit, days, monthStr, today, totalDays, comp
   )
 
   const total = completedDates.size
-  const streak = calcStreak(streakDates)
-  const streakLevel = showStreak ? getStreakLevel(streak) : null
+  const streak = calcPeriodStreak(habit.frequency, streakDates)
+  const streakLevel = showStreak ? getStreakLevel(streak, habit.frequency) : null
   // Celebration triggers off the best run ever logged, not just the streak
   // ending today — backfilling an old 3-in-a-row (now that any past day can
   // be checked) is just as worth celebrating as building one in real time.
-  const bestStreak = calcBestStreak(streakDates)
+  const bestStreak = calcBestPeriodStreak(habit.frequency, streakDates)
 
   useEffect(() => {
-    if (!showStreak) return
+    // Deliberately NOT gated on `showStreak` (current-month-only) — bestStreak
+    // already spans a 12-month window, so backfilling a milestone while
+    // looking at a past month is just as real as hitting it live, and should
+    // still celebrate (showStreak only controls whether the small racha
+    // badge renders, not whether a real milestone gets detected).
 
     // If the best streak dropped since we last saw it (a backfilled day got
     // unchecked), forget which tiers were celebrated so rebuilding past them
@@ -76,17 +84,27 @@ export default function HabitRow({ habit, days, monthStr, today, totalDays, comp
     }
     localStorage.setItem(lastKey, String(bestStreak))
 
-    const bestLevel = getStreakLevel(bestStreak)
+    const bestLevel = getStreakLevel(bestStreak, habit.frequency)
     if (!bestLevel) return
     const key = celebratedKey(habit.id)
     const lastCelebrated = Number(localStorage.getItem(key) ?? 0)
-    if (bestLevel.days > lastCelebrated) {
-      localStorage.setItem(key, String(bestLevel.days))
+    // Daily check-ins are frequent enough that the fixed 3/7/14/30 ladder
+    // leaves long silent stretches (nothing between 8 and 13 days, say) —
+    // so daily celebrates every 3rd consecutive day instead. Weekly,
+    // monthly and weekend habits keep the fixed ladder: their periods are
+    // already spaced out enough (a week, a month) that every-3rd-period
+    // would barely differ from the ladder while losing the escalating
+    // milestone messages.
+    const newMilestone = habit.frequency === 'daily'
+      ? bestStreak % 3 === 0 && bestStreak > lastCelebrated
+      : bestLevel.periods > lastCelebrated
+    if (newMilestone) {
+      localStorage.setItem(key, String(habit.frequency === 'daily' ? bestStreak : bestLevel.periods))
       // Triggers only when bestStreak crosses a new milestone, not on every render.
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setCelebrating({ level: bestLevel, streak: bestStreak })
     }
-  }, [habit.id, bestStreak, showStreak])
+  }, [habit.id, bestStreak, habit.frequency])
 
   const completedUpToToday = countCompletedPeriods(habit.frequency, completedDates, today)
   const effectivePeriods = habitPeriodsElapsed(habit.frequency, habitDaysElapsed(habit.created_at, monthStr, totalDays))
@@ -94,7 +112,29 @@ export default function HabitRow({ habit, days, monthStr, today, totalDays, comp
 
   const handleDelete = () => {
     setConfirmingDelete(false)
+    // Snapshot this month's completions now — the DELETE below wipes them
+    // server-side immediately, so this is the only copy left if the user
+    // hits "Deshacer" and we need to recreate them.
+    setPendingRestoreDates(Array.from(completedDates))
     setDeleting(true)
+    // Fire the real delete now rather than after the undo window: deferring
+    // it lived only in a client-side setTimeout, so an F5 or nav during the
+    // window silently cancelled it — the toast said "eliminado" but nothing
+    // was ever sent. Committing immediately means a refresh can't lose it;
+    // "Deshacer" undoes via the restore endpoint instead of never-deleting.
+    deleteHabit.mutate({ id: habit.id, month: monthStr })
+  }
+
+  const handleUndo = () => {
+    restoreHabit.mutate({ id: habit.id, month: monthStr, dates: pendingRestoreDates })
+    setDeleting(false)
+  }
+
+  const handleUndoWindowClosed = () => {
+    // Nothing to restore — sync the UI (this row, percentages elsewhere)
+    // with the deletion that already happened on the server.
+    qc.invalidateQueries({ queryKey: ['habits'] })
+    qc.invalidateQueries({ queryKey: ['completions', monthStr] })
   }
 
   const handleArchive = () => {
@@ -106,8 +146,8 @@ export default function HabitRow({ habit, days, monthStr, today, totalDays, comp
       <Toast
         message={`"${habit.name}" eliminado`}
         actionLabel="Deshacer"
-        onAction={() => setDeleting(false)}
-        onTimeout={() => deleteHabit.mutate(habit.id)}
+        onAction={handleUndo}
+        onTimeout={handleUndoWindowClosed}
       />
     )
   }
@@ -146,9 +186,9 @@ export default function HabitRow({ habit, days, monthStr, today, totalDays, comp
                 <span
                   className="flex items-center gap-1 text-sm leading-tight truncate"
                   style={{ color: streakLevel?.color ?? undefined }}
-                  title={`Racha de ${streak} día${streak === 1 ? '' : 's'}`}
+                  title={`Racha de ${streak} ${periodUnitLabel(habit.frequency, streak)}`}
                 >
-                  🔥 Racha: {streak} día{streak === 1 ? '' : 's'}
+                  🔥 Racha: {streak} {periodUnitLabel(habit.frequency, streak)}
                 </span>
               )}
               <span
@@ -229,7 +269,7 @@ export default function HabitRow({ habit, days, monthStr, today, totalDays, comp
             <button
               onClick={() => setConfirmingDelete(true)}
               className="p-0.5 rounded text-cream-600 dark:text-cream-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all active:scale-90 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-1"
-              title="Eliminar hábito permanentemente"
+              title="Eliminar hábito de este mes"
               aria-label={`Eliminar ${habit.name}`}
             >
               <Trash size={14} />
@@ -288,7 +328,7 @@ export default function HabitRow({ habit, days, monthStr, today, totalDays, comp
       {confirmingDelete && (
         <ConfirmDialog
           title="Eliminar hábito"
-          message={`¿Eliminar "${habit.name}"? Tendrás unos segundos para deshacerlo después.`}
+          message={`¿Eliminar "${habit.name}" de este mes? Tendrás unos segundos para deshacerlo después.`}
           confirmLabel="Eliminar"
           danger
           onConfirm={handleDelete}
@@ -300,6 +340,7 @@ export default function HabitRow({ habit, days, monthStr, today, totalDays, comp
           habitName={habit.name}
           level={celebrating.level}
           streak={celebrating.streak}
+          frequency={habit.frequency}
           onDismiss={() => setCelebrating(null)}
         />
       )}

@@ -1,11 +1,11 @@
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from ..auth import get_current_uid
 from ..firebase import get_db
-from ..models.habit import HabitCreate, HabitOut, HabitUpdate
+from ..models.habit import HabitCreate, HabitOut, HabitRestore, HabitUpdate
 
 router = APIRouter(prefix="/api/habits", tags=["habits"])
 
@@ -61,6 +61,7 @@ def _doc_to_habit(doc) -> HabitOut:
         order=d.get("order", 0),
         created_at=d.get("created_at"),
         updated_at=d.get("updated_at"),
+        excluded_months=d.get("excluded_months", []),
     )
 
 
@@ -122,9 +123,55 @@ def update_habit(habit_id: str, body: HabitUpdate, uid: str = Depends(get_curren
 
 
 @router.delete("/{habit_id}", status_code=204)
-def delete_habit(habit_id: str, uid: str = Depends(get_current_uid)):
+def delete_habit(
+    habit_id: str,
+    month: str = Query(..., description="YYYY-MM"),
+    uid: str = Depends(get_current_uid),
+):
     db = get_db()
     ref = db.collection("users").document(uid).collection("habits").document(habit_id)
-    if not ref.get().exists:
+    doc = ref.get()
+    if not doc.exists:
         raise HTTPException(status_code=404, detail="Habit not found")
-    ref.delete()
+
+    excluded_months = doc.to_dict().get("excluded_months", [])
+    if month not in excluded_months:
+        ref.update({"excluded_months": excluded_months + [month]})
+
+    # Filter by habit_id only in Firestore (same index-avoidance pattern as
+    # completions.list_completions) and check the date range in Python.
+    start = f"{month}-01"
+    end = f"{month}-32"
+    completions_ref = db.collection("users").document(uid).collection("completions")
+    habit_completions = completions_ref.where("habit_id", "==", habit_id).get()
+    for c in habit_completions:
+        if start <= c.to_dict()["date"] <= end:
+            c.reference.delete()
+
+
+@router.post("/{habit_id}/restore", status_code=204)
+def restore_habit(
+    habit_id: str,
+    body: HabitRestore,
+    uid: str = Depends(get_current_uid),
+):
+    """Undo a delete: un-exclude the month and recreate the completions the
+    frontend still had cached from before the delete (the ones the DELETE
+    call above just removed)."""
+    db = get_db()
+    ref = db.collection("users").document(uid).collection("habits").document(habit_id)
+    doc = ref.get()
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="Habit not found")
+
+    excluded_months = doc.to_dict().get("excluded_months", [])
+    if body.month in excluded_months:
+        ref.update({"excluded_months": [m for m in excluded_months if m != body.month]})
+
+    completions_ref = db.collection("users").document(uid).collection("completions")
+    now = datetime.now(timezone.utc)
+    for date in body.dates:
+        existing = completions_ref.where("habit_id", "==", habit_id).where("date", "==", date).limit(1).get()
+        if existing:
+            continue
+        completions_ref.add({"habit_id": habit_id, "date": date, "created_at": now})

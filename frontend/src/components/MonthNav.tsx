@@ -3,6 +3,7 @@ interface MonthNavProps {
   month: number // 1-based
   onPrev: () => void
   onNext: () => void
+  disablePrev?: boolean
 }
 
 const MONTHS = [
@@ -10,12 +11,13 @@ const MONTHS = [
   'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE',
 ]
 
-export default function MonthNav({ year, month, onPrev, onNext }: MonthNavProps) {
+export default function MonthNav({ year, month, onPrev, onNext, disablePrev = false }: MonthNavProps) {
   return (
     <div className="flex items-center gap-3">
       <button
         onClick={onPrev}
-        className="w-11 h-11 rounded-full border border-cream-300 dark:border-cream-600 bg-cream-50 dark:bg-cream-800 hover:bg-cream-200 dark:hover:bg-cream-700 text-cream-700 dark:text-cream-200 font-bold text-base flex items-center justify-center transition-all active:scale-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-cream-400"
+        disabled={disablePrev}
+        className="w-11 h-11 rounded-full border border-cream-300 dark:border-cream-600 bg-cream-50 dark:bg-cream-800 hover:bg-cream-200 dark:hover:bg-cream-700 text-cream-700 dark:text-cream-200 font-bold text-base flex items-center justify-center transition-all active:scale-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-cream-400 disabled:opacity-30 disabled:cursor-not-allowed disabled:active:scale-100 disabled:hover:bg-cream-50 dark:disabled:hover:bg-cream-800"
         aria-label="Mes anterior"
       >
         ‹

@@ -23,9 +23,12 @@ Personal habit tracking app — warm analog aesthetic, Firebase Auth, FastAPI ba
 cd backend
 cp .env.example .env
 # Fill in GOOGLE_APPLICATION_CREDENTIALS path to your service account JSON
-pip install -r requirements.txt
-uvicorn main:app --reload
+./run-dev.sh
 ```
+`run-dev.sh` is the canonical way to start it — always runs from repo root
+with `--reload`. A hand-typed `uvicorn` invocation without `--reload` has
+already caused a real data-loss incident (stale process silently serving
+old code for hours). Don't type the uvicorn command by hand; use the script.
 
 ### 3. Frontend
 ```bash
@@ -41,10 +44,9 @@ App runs at `http://localhost:5173`, API at `http://localhost:8000`.
 ---
 
 ## Running the backend as a module (if you get import errors)
-```bash
-# From repo root:
-python -m uvicorn backend.main:app --reload
-```
+`backend/run-dev.sh` already does this correctly (runs `uvicorn
+backend.main:app` from repo root, not `backend/`) — use it instead of
+invoking `uvicorn`/`python -m uvicorn` by hand.
 
 ---
 

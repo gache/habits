@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plant, Sun, Moon, CalendarBlank, Plus, SignOut, Heart } from '@phosphor-icons/react'
+import { Plant, Sun, Moon, CalendarBlank, ChartLineUp, Plus, SignOut, Heart, ArrowCounterClockwise } from '@phosphor-icons/react'
 import { signOut } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
-import { useHabits } from '@/hooks/useHabits'
+import { useHabits, useRestoreHabit } from '@/hooks/useHabits'
 import { useCompletions, useCompletionsForMonths, useToggleCompletion } from '@/hooks/useCompletions'
 import { useMonthlyLog, useUpdateMonthlyLog } from '@/hooks/useMonthlyLog'
 import MonthNav from '@/components/MonthNav'
@@ -13,8 +13,9 @@ import MonthlyLog from '@/components/MonthlyLog'
 import AddHabitModal from '@/components/AddHabitModal'
 import BestStreaks from '@/components/BestStreaks'
 import Toast from '@/components/Toast'
-import { pad, getDaysInMonth, todayStr, habitDaysElapsed, habitPeriodsElapsed, countCompletedPeriods, recentMonthStrs } from '@/lib/date-utils'
+import { pad, recentMonthStrs, APP_START_MONTH } from '@/lib/date-utils'
 import { getProgressColor } from '@/lib/progress-color'
+import { monthlyGlobalPct, visibleHabitsForMonth } from '@/lib/report-utils'
 
 const DEMO = import.meta.env.VITE_DEMO_MODE === 'true'
 
@@ -34,6 +35,12 @@ export default function Tracker() {
 
   const monthStr = `${year}-${pad(month)}`
   const { data: habits = [], isLoading: habitsLoading, isError: habitsError } = useHabits(true)
+  const visibleHabits = visibleHabitsForMonth(habits, monthStr)
+  // Habits deleted from this specific month (via excluded_months) — once the
+  // undo toast's 5s window closes there's otherwise no way back short of
+  // calling the API by hand, so surface them here with a one-click restore.
+  const excludedHabits = habits.filter((h) => h.excluded_months?.includes(monthStr))
+  const restoreHabit = useRestoreHabit()
   const { data: completions = [] } = useCompletions(monthStr)
   // Widened window (not just the displayed month) so a per-habit streak
   // that crosses a month boundary — e.g. started the 28th, still going on
@@ -45,22 +52,11 @@ export default function Tracker() {
   const updateLog = useUpdateMonthlyLog(monthStr)
   const { toggle } = useToggleCompletion(monthStr)
 
-  const today = todayStr()
-  const isCurrentMonth = monthStr === today.slice(0, 7)
-  const daysElapsed = isCurrentMonth ? new Date().getDate() : getDaysInMonth(year, month)
-  const totalPossible = habits.reduce(
-    (sum, h) => sum + habitPeriodsElapsed(h.frequency, habitDaysElapsed(h.created_at, monthStr, daysElapsed)), 0,
-  )
-  const completedUpToToday = habits.reduce((sum, h) => {
-    const dates = new Set(completions.filter((c) => c.habit_id === h.id).map((c) => c.date))
-    return sum + countCompletedPeriods(h.frequency, dates, today)
-  }, 0)
-  const globalPct = totalPossible > 0
-    ? Math.min(100, Math.round((completedUpToToday / totalPossible) * 100))
-    : null
+  const globalPct = monthlyGlobalPct(habits, completions, monthStr)
   const pctColor = globalPct === null ? '#a88c58' : getProgressColor(globalPct)
 
   const prevMonth = () => {
+    if (monthStr <= APP_START_MONTH) return
     if (month === 1) { setYear((y) => y - 1); setMonth(12) }
     else setMonth((m) => m - 1)
   }
@@ -84,6 +80,13 @@ export default function Tracker() {
             >
               <CalendarBlank size={13} weight="bold" aria-hidden="true" />
               Historial
+            </button>
+            <button
+              onClick={() => navigate('/informe')}
+              className="flex items-center gap-1.5 h-11 text-sm font-600 text-cream-600 dark:text-cream-300 border border-cream-200 dark:border-cream-700 rounded-full px-4 hover:bg-cream-200 dark:hover:bg-cream-800 transition-all active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400"
+            >
+              <ChartLineUp size={13} weight="bold" aria-hidden="true" />
+              Informe
             </button>
             <button
               onClick={() => toggleDark(!darkMode)}
@@ -140,7 +143,7 @@ export default function Tracker() {
 
         {/* ── Month bar ── */}
         <div className="bg-cream-50 dark:bg-cream-800 border border-cream-200 dark:border-cream-700 rounded-xl px-4 py-3 mb-4 shadow-xs flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
-          <MonthNav year={year} month={month} onPrev={prevMonth} onNext={nextMonth} />
+          <MonthNav year={year} month={month} onPrev={prevMonth} onNext={nextMonth} disablePrev={monthStr <= APP_START_MONTH} />
           <div className="flex items-center gap-2 flex-1 sm:max-w-xs">
             <label className="text-sm font-600 font-sans uppercase tracking-widest text-cream-700 dark:text-cream-400 shrink-0">Meta</label>
             <input
@@ -161,8 +164,27 @@ export default function Tracker() {
           </button>
         </div>
 
+        {/* ── Excluded from this month ── */}
+        {excludedHabits.length > 0 && (
+          <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
+            <span className="text-cream-600 dark:text-cream-400">Eliminados este mes:</span>
+            {excludedHabits.map((h) => (
+              <button
+                key={h.id}
+                onClick={() => restoreHabit.mutate({ id: h.id, month: monthStr, dates: [] })}
+                disabled={restoreHabit.isPending}
+                className="inline-flex items-center gap-1.5 rounded-full border border-cream-300 dark:border-cream-600 bg-cream-50 dark:bg-cream-800 px-2.5 py-1 text-cream-700 dark:text-cream-200 hover:bg-cream-100 dark:hover:bg-cream-700 transition-all active:scale-95 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-cream-400"
+              >
+                {h.icon} {h.name}
+                <ArrowCounterClockwise size={12} weight="bold" aria-hidden="true" />
+                Restaurar
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* ── Streaks ── */}
-        <BestStreaks habits={habits} completions={completions} title="Mejores rachas este mes" />
+        <BestStreaks habits={visibleHabits} completions={completions} title="Mejores rachas este mes" />
 
         {/* ── Grid ── */}
         {/* key={monthStr} forces a remount on month nav so content-fade-in
@@ -180,7 +202,7 @@ export default function Tracker() {
             </div>
           ) : (
             <HabitGrid
-              habits={habits}
+              habits={visibleHabits}
               year={year}
               month={month}
               completions={completions}
@@ -189,7 +211,7 @@ export default function Tracker() {
               onToggle={toggle}
             />
           )}
-          <WeeklyProgress year={year} month={month} completions={completions} habits={habits} />
+          <WeeklyProgress year={year} month={month} completions={completions} habits={visibleHabits} />
           <MonthlyLog month={monthStr} />
         </div>
 

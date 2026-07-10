@@ -1,5 +1,9 @@
-import { describe, it, expect } from 'vitest'
-import { pad, getDaysInMonth, habitDaysElapsed, habitPeriodsElapsed, calcStreak, calcBestStreak, periodBounds, isPeriodLocked, isWeekday, isWeekend, countCompletedPeriods, dayChunks } from '../date-utils'
+import { describe, it, expect, vi, afterEach } from 'vitest'
+import { pad, getDaysInMonth, habitDaysElapsed, habitPeriodsElapsed, calcPeriodStreak, calcBestPeriodStreak, periodBounds, isPeriodLocked, isWeekday, isWeekend, countCompletedPeriods, dayChunks, recentMonthStrs, APP_START_MONTH } from '../date-utils'
+
+afterEach(() => {
+  vi.useRealTimers()
+})
 
 describe('pad', () => {
   it('pads single digits with a leading zero', () => {
@@ -25,6 +29,22 @@ describe('getDaysInMonth', () => {
   })
 })
 
+describe('recentMonthStrs', () => {
+  it('returns the requested count when well within app history', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 6, 15)) // July 15 2026
+    expect(recentMonthStrs(3)).toEqual(['2026-07', '2026-06', '2026-05'])
+  })
+
+  it('stops at APP_START_MONTH instead of going further back', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 2, 15)) // March 15 2026 — only Mar/Feb/Jan 2026 exist
+    const months = recentMonthStrs(12)
+    expect(months).toEqual(['2026-03', '2026-02', '2026-01'])
+    expect(months.every((m) => m >= APP_START_MONTH)).toBe(true)
+  })
+})
+
 describe('habitDaysElapsed', () => {
   it('returns full daysElapsed when createdAt is null', () => {
     expect(habitDaysElapsed(null, '2026-07', 15)).toBe(15)
@@ -40,6 +60,14 @@ describe('habitDaysElapsed', () => {
 
   it('returns full daysElapsed when habit created within the same month (backfill allowed)', () => {
     expect(habitDaysElapsed('2026-07-10T00:00:00Z', '2026-07', 15)).toBe(15)
+  })
+
+  it('returns 0 when habit created later and hasCompletions is false', () => {
+    expect(habitDaysElapsed('2026-08-01T00:00:00Z', '2026-07', 15, false)).toBe(0)
+  })
+
+  it('returns full daysElapsed when habit created later but hasCompletions is true (backfilled before creation)', () => {
+    expect(habitDaysElapsed('2026-08-01T00:00:00Z', '2026-07', 15, true)).toBe(15)
   })
 })
 
@@ -182,12 +210,12 @@ describe('dayChunks', () => {
   })
 })
 
-describe('calcStreak', () => {
+describe('calcPeriodStreak', () => {
   it('returns 0 for no completions', () => {
-    expect(calcStreak(new Set())).toBe(0)
+    expect(calcPeriodStreak('daily', new Set())).toBe(0)
   })
 
-  it('counts consecutive days ending today', () => {
+  it('daily: counts consecutive days ending today', () => {
     const today = new Date()
     const dates = new Set<string>()
     for (let i = 0; i < 3; i++) {
@@ -195,31 +223,95 @@ describe('calcStreak', () => {
       d.setDate(d.getDate() - i)
       dates.add(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`)
     }
-    expect(calcStreak(dates)).toBe(3)
+    expect(calcPeriodStreak('daily', dates)).toBe(3)
   })
 
-  it('does not zero out streak if today is not yet completed', () => {
+  it('daily: does not zero out streak if today is not yet completed', () => {
     const today = new Date()
     const yesterday = new Date(today)
     yesterday.setDate(yesterday.getDate() - 1)
     const dates = new Set<string>([
       `${yesterday.getFullYear()}-${pad(yesterday.getMonth() + 1)}-${pad(yesterday.getDate())}`,
     ])
-    expect(calcStreak(dates)).toBe(1)
+    expect(calcPeriodStreak('daily', dates)).toBe(1)
+  })
+
+  it('weekly: counts consecutive weeks (any weekday) ending on the current week', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 6, 8)) // Wednesday, July 8 2026
+    // This week (Mon Jul 6) + last week (Mon Jun 29) both have a check, on
+    // different weekdays — still counts as 2 consecutive weekly periods.
+    const dates = new Set(['2026-07-06', '2026-06-30'])
+    expect(calcPeriodStreak('weekly', dates)).toBe(2)
+    vi.useRealTimers()
+  })
+
+  it('weekly: does not zero out streak if the current week is not yet completed', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 6, 8)) // Wednesday, current week has no check yet
+    const dates = new Set(['2026-06-30']) // last week only
+    expect(calcPeriodStreak('weekly', dates)).toBe(1)
+    vi.useRealTimers()
+  })
+
+  it('weekly: breaks on a missed week', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 6, 8))
+    const dates = new Set(['2026-07-06', '2026-06-15']) // this week + two weeks ago, gap in between
+    expect(calcPeriodStreak('weekly', dates)).toBe(1)
+    vi.useRealTimers()
+  })
+
+  it('monthly: counts consecutive months ending on the current month', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 6, 15)) // July 2026
+    const dates = new Set(['2026-07-02', '2026-06-20', '2026-05-01'])
+    expect(calcPeriodStreak('monthly', dates)).toBe(3)
+    vi.useRealTimers()
+  })
+
+  it('monthly: does not zero out streak if the current month is not yet completed', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 6, 15))
+    const dates = new Set(['2026-06-20'])
+    expect(calcPeriodStreak('monthly', dates)).toBe(1)
+    vi.useRealTimers()
+  })
+
+  it('weekend: counts consecutive weekends the same way weekly counts weeks', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 6, 8))
+    const dates = new Set(['2026-07-05', '2026-06-28']) // Sunday this week + last week
+    expect(calcPeriodStreak('weekend', dates)).toBe(2)
+    vi.useRealTimers()
   })
 })
 
-describe('calcBestStreak', () => {
+describe('calcBestPeriodStreak', () => {
   it('returns 0 for no completions', () => {
-    expect(calcBestStreak(new Set())).toBe(0)
+    expect(calcBestPeriodStreak('daily', new Set())).toBe(0)
   })
 
-  it('finds the longest consecutive run anywhere in the set', () => {
+  it('daily: finds the longest consecutive run anywhere in the set', () => {
     const dates = new Set([
       '2026-01-01', '2026-01-02', '2026-01-03',
       '2026-02-10',
       '2026-03-01', '2026-03-02', '2026-03-03', '2026-03-04', '2026-03-05',
     ])
-    expect(calcBestStreak(dates)).toBe(5)
+    expect(calcBestPeriodStreak('daily', dates)).toBe(5)
+  })
+
+  it('weekly: finds the longest run of consecutive weeks, collapsing same-week dates', () => {
+    const dates = new Set([
+      '2026-06-15', '2026-06-17', // same week (Mon Jun 15)
+      '2026-06-22', // next week
+      '2026-07-13', // unrelated later week, breaks the run
+    ])
+    expect(calcBestPeriodStreak('weekly', dates)).toBe(2)
+  })
+
+  it('monthly: finds the longest run of consecutive months', () => {
+    const dates = new Set(['2026-01-05', '2026-02-01', '2026-03-20', '2026-05-01'])
+    expect(calcBestPeriodStreak('monthly', dates)).toBe(3)
   })
 })

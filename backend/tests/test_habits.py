@@ -35,14 +35,17 @@ def test_active_filter_splits_seeded_habits(client):
     assert inactive[0]["id"] == first_id
 
 
-def test_deleting_all_habits_does_not_reseed_defaults(client):
+def test_deleting_all_habits_excludes_from_month_but_keeps_docs(client):
     all_habits = client.get("/api/habits").json()
     for h in all_habits:
-        client.delete(f"/api/habits/{h['id']}")
+        r = client.delete(f"/api/habits/{h['id']}", params={"month": "2026-07"})
+        assert r.status_code == 204
 
     r = client.get("/api/habits")
     assert r.status_code == 200
-    assert r.json() == []
+    data = r.json()
+    assert len(data) == 16
+    assert all("2026-07" in h["excluded_months"] for h in data)
 
 
 def test_update_missing_habit_404s(client):
@@ -51,5 +54,70 @@ def test_update_missing_habit_404s(client):
 
 
 def test_delete_missing_habit_404s(client):
-    r = client.delete("/api/habits/does-not-exist")
+    r = client.delete("/api/habits/does-not-exist", params={"month": "2026-07"})
     assert r.status_code == 404
+
+
+def test_delete_only_excludes_target_month(client):
+    habit = client.post("/api/habits", json={"name": "Leer"}).json()
+    r = client.delete(f"/api/habits/{habit['id']}", params={"month": "2026-07"})
+    assert r.status_code == 204
+    updated = client.get(f"/api/habits/{habit['id']}").json()
+    assert updated["excluded_months"] == ["2026-07"]
+
+
+def test_delete_removes_only_that_months_completions(client):
+    habit = client.post("/api/habits", json={"name": "Leer"}).json()
+    client.post(f"/api/habits/{habit['id']}/complete", json={"date": "2026-06-30"})
+    client.post(f"/api/habits/{habit['id']}/complete", json={"date": "2026-07-01"})
+
+    client.delete(f"/api/habits/{habit['id']}", params={"month": "2026-07"})
+
+    july = client.get("/api/completions", params={"month": "2026-07"}).json()
+    june = client.get("/api/completions", params={"month": "2026-06"}).json()
+    assert july == []
+    assert [c["date"] for c in june] == ["2026-06-30"]
+
+
+def test_delete_twice_same_month_does_not_duplicate_exclusion(client):
+    habit = client.post("/api/habits", json={"name": "Leer"}).json()
+    client.delete(f"/api/habits/{habit['id']}", params={"month": "2026-07"})
+    client.delete(f"/api/habits/{habit['id']}", params={"month": "2026-07"})
+    updated = client.get(f"/api/habits/{habit['id']}").json()
+    assert updated["excluded_months"] == ["2026-07"]
+
+
+def test_restore_missing_habit_404s(client):
+    r = client.post("/api/habits/does-not-exist/restore", json={"month": "2026-07"})
+    assert r.status_code == 404
+
+
+def test_restore_undoes_exclusion_and_recreates_completions(client):
+    habit = client.post("/api/habits", json={"name": "Leer"}).json()
+    client.post(f"/api/habits/{habit['id']}/complete", json={"date": "2026-06-30"})
+    client.post(f"/api/habits/{habit['id']}/complete", json={"date": "2026-07-01"})
+    client.delete(f"/api/habits/{habit['id']}", params={"month": "2026-07"})
+
+    r = client.post(
+        f"/api/habits/{habit['id']}/restore",
+        json={"month": "2026-07", "dates": ["2026-07-01"]},
+    )
+    assert r.status_code == 204
+
+    updated = client.get(f"/api/habits/{habit['id']}").json()
+    assert updated["excluded_months"] == []
+    july = client.get("/api/completions", params={"month": "2026-07"}).json()
+    assert [c["date"] for c in july] == ["2026-07-01"]
+
+
+def test_restore_is_idempotent_for_already_present_completions(client):
+    habit = client.post("/api/habits", json={"name": "Leer"}).json()
+    client.post(f"/api/habits/{habit['id']}/complete", json={"date": "2026-07-01"})
+
+    r = client.post(
+        f"/api/habits/{habit['id']}/restore",
+        json={"month": "2026-07", "dates": ["2026-07-01"]},
+    )
+    assert r.status_code == 204
+    july = client.get("/api/completions", params={"month": "2026-07"}).json()
+    assert len(july) == 1

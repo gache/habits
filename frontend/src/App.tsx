@@ -7,6 +7,7 @@ import UpdatePrompt from '@/components/UpdatePrompt'
 const Login = lazy(() => import('@/pages/Login'))
 const Tracker = lazy(() => import('@/pages/Tracker'))
 const History = lazy(() => import('@/pages/History'))
+const Report = lazy(() => import('@/pages/Report'))
 
 const DEMO = import.meta.env.VITE_DEMO_MODE === 'true'
 const DEMO_USER = { uid: 'demo-user', email: 'demo@example.com' } as User
@@ -46,6 +47,7 @@ export default function App() {
             <>
               <Route path="/" element={<Tracker />} />
               <Route path="/history" element={<History />} />
+              <Route path="/informe" element={<Report />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </>
           ) : (
