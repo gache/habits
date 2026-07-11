@@ -17,6 +17,22 @@ import Toast from './Toast'
 import { getDaysInMonth, pad, todayStr, dayChunks } from '@/lib/date-utils'
 import { reorderHabits } from '@/lib/reorder'
 
+export const CATEGORY_ORDER = ['daily', 'weekly', 'weekend', 'monthly'] as const
+type Freq = typeof CATEGORY_ORDER[number]
+
+export const CATEGORY_LABELS: Record<Freq, string> = {
+  daily: 'Diario',
+  weekly: 'Semanal',
+  weekend: 'Fin de semana',
+  monthly: 'Mensual',
+}
+
+export function groupByFrequency(habits: Habit[]) {
+  return CATEGORY_ORDER
+    .map((freq) => ({ freq, habits: habits.filter((h) => h.frequency === freq) }))
+    .filter((g) => g.habits.length > 0)
+}
+
 interface HabitGridProps {
   habits: Habit[]
   year: number

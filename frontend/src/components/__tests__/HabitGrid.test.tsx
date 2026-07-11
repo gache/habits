@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import api from '@/lib/api'
-import HabitGrid from '../HabitGrid'
+import HabitGrid, { groupByFrequency } from '../HabitGrid'
 import { type Habit } from '@/hooks/useHabits'
 import { type Completion } from '@/hooks/useCompletions'
 
@@ -147,5 +147,39 @@ describe('HabitGrid', () => {
 
   it('mocks api so no real network calls happen', () => {
     expect(api.get).not.toHaveBeenCalled()
+  })
+})
+
+describe('groupByFrequency', () => {
+  it('buckets habits by frequency in fixed category order', () => {
+    const daily = makeHabit({ id: 'd1', frequency: 'daily' })
+    const weekly = makeHabit({ id: 'w1', frequency: 'weekly' })
+    const weekend = makeHabit({ id: 'we1', frequency: 'weekend' })
+    const monthly = makeHabit({ id: 'm1', frequency: 'monthly' })
+
+    const groups = groupByFrequency([monthly, weekend, weekly, daily])
+
+    expect(groups.map((g) => g.freq)).toEqual(['daily', 'weekly', 'weekend', 'monthly'])
+    expect(groups[0].habits).toEqual([daily])
+    expect(groups[1].habits).toEqual([weekly])
+    expect(groups[2].habits).toEqual([weekend])
+    expect(groups[3].habits).toEqual([monthly])
+  })
+
+  it('omits categories with no habits', () => {
+    const daily = makeHabit({ id: 'd1', frequency: 'daily' })
+    const groups = groupByFrequency([daily])
+    expect(groups).toEqual([{ freq: 'daily', habits: [daily] }])
+  })
+
+  it('preserves relative order of habits within a category', () => {
+    const first = makeHabit({ id: 'd1', frequency: 'daily' })
+    const second = makeHabit({ id: 'd2', frequency: 'daily' })
+    const groups = groupByFrequency([second, first])
+    expect(groups[0].habits.map((h) => h.id)).toEqual(['d2', 'd1'])
+  })
+
+  it('returns an empty array for an empty habit list', () => {
+    expect(groupByFrequency([])).toEqual([])
   })
 })
