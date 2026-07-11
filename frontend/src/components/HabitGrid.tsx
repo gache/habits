@@ -175,32 +175,44 @@ export default function HabitGrid({ habits, year, month, completions, streakComp
               <th className="px-1.5 text-center font-bold text-cream-700 dark:text-cream-200 w-9 sm:w-12 rounded-sm">TOTAL</th>
             </tr>
           </thead>
-          <SortableContext items={orderedHabits.map((h) => h.id)} strategy={verticalListSortingStrategy}>
-            <tbody>
-              {orderedHabits.map((habit) => (
-                <HabitRow
-                  key={habit.id}
-                  habit={habit}
-                  days={days}
-                  monthStr={monthStr}
-                  today={today}
-                  totalDays={daysElapsed}
-                  completions={completions}
-                  streakCompletions={streakCompletions}
-                  showStreak={isCurrentMonth}
-                  mobileVisibleDays={mobileVisibleDays}
-                  onToggle={onToggle}
-                />
-              ))}
-              {orderedHabits.length === 0 && (
+          {groupByFrequency(orderedHabits).map((group) => (
+            <SortableContext key={group.freq} items={group.habits.map((h) => h.id)} strategy={verticalListSortingStrategy}>
+              <tbody>
                 <tr>
-                  <td colSpan={days.length + 2} className="text-center py-8 text-cream-700 dark:text-cream-400 font-handwritten text-lg">
-                    Aún no hay hábitos — ¡agrega uno con el botón +!
+                  <td
+                    colSpan={days.length + 2}
+                    className="px-4 py-1 text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50"
+                  >
+                    {CATEGORY_LABELS[group.freq]}
                   </td>
                 </tr>
-              )}
+                {group.habits.map((habit) => (
+                  <HabitRow
+                    key={habit.id}
+                    habit={habit}
+                    days={days}
+                    monthStr={monthStr}
+                    today={today}
+                    totalDays={daysElapsed}
+                    completions={completions}
+                    streakCompletions={streakCompletions}
+                    showStreak={isCurrentMonth}
+                    mobileVisibleDays={mobileVisibleDays}
+                    onToggle={onToggle}
+                  />
+                ))}
+              </tbody>
+            </SortableContext>
+          ))}
+          {orderedHabits.length === 0 && (
+            <tbody>
+              <tr>
+                <td colSpan={days.length + 2} className="text-center py-8 text-cream-700 dark:text-cream-400 font-handwritten text-lg">
+                  Aún no hay hábitos — ¡agrega uno con el botón +!
+                </td>
+              </tr>
             </tbody>
-          </SortableContext>
+          )}
         </table>
         </DndContext>
       </div>

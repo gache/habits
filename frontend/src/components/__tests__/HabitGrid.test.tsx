@@ -148,6 +148,59 @@ describe('HabitGrid', () => {
   it('mocks api so no real network calls happen', () => {
     expect(api.get).not.toHaveBeenCalled()
   })
+
+  it('renders a category header row per non-empty frequency group, in fixed order', () => {
+    const daily = makeHabit({ id: 'd1', name: 'Leer', frequency: 'daily' })
+    const monthly = makeHabit({ id: 'm1', name: 'Pagar Renta', frequency: 'monthly' })
+    render(
+      <HabitGrid
+        habits={[monthly, daily]}
+        year={2026}
+        month={7}
+        completions={[]}
+        onToggle={vi.fn()}
+      />,
+      { wrapper: wrapper() },
+    )
+
+    const headers = screen.getAllByText(/^(Diario|Semanal|Fin de semana|Mensual)$/, { selector: 'td.bg-gray-50' })
+    expect(headers.map((el) => el.textContent)).toEqual(['Diario', 'Mensual'])
+  })
+
+  it('omits category headers for frequencies with no habits', () => {
+    render(
+      <HabitGrid
+        habits={[makeHabit({ frequency: 'daily' })]}
+        year={2026}
+        month={7}
+        completions={[]}
+        onToggle={vi.fn()}
+      />,
+      { wrapper: wrapper() },
+    )
+
+    expect(screen.queryByText('Semanal')).not.toBeInTheDocument()
+    expect(screen.queryByText('Fin de semana')).not.toBeInTheDocument()
+    expect(screen.queryByText('Mensual')).not.toBeInTheDocument()
+  })
+
+  it('still renders every habit row under its category', () => {
+    const daily = makeHabit({ id: 'd1', name: 'Leer', frequency: 'daily' })
+    const weekend = makeHabit({ id: 'we1', name: 'Limpiar', frequency: 'weekend' })
+    render(
+      <HabitGrid
+        habits={[daily, weekend]}
+        year={2026}
+        month={7}
+        completions={[]}
+        onToggle={vi.fn()}
+      />,
+      { wrapper: wrapper() },
+    )
+
+    expect(screen.getByText(/Leer/)).toBeInTheDocument()
+    expect(screen.getByText(/Limpiar/)).toBeInTheDocument()
+  })
 })
 
 describe('groupByFrequency', () => {
