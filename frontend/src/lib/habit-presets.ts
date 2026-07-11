@@ -6,10 +6,10 @@ export interface HabitPreset {
 }
 
 export const FREQUENCY_LABELS: Record<'daily' | 'weekly' | 'monthly' | 'weekend', string> = {
-  daily: 'Diaria',
+  daily: 'Diario',
   weekly: 'Semanal',
   monthly: 'Mensual',
-  weekend: 'Fin de Semana',
+  weekend: 'Fin de semana',
 }
 
 /** Eye-catching badge colors per frequency — one glance tells the category apart. */

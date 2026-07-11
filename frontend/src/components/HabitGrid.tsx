@@ -11,6 +11,7 @@ import {
 } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy, sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 import { type Habit, useReorderHabits } from '@/hooks/useHabits'
+import { FREQUENCY_LABELS } from '@/lib/habit-presets'
 import { type Completion } from '@/hooks/useCompletions'
 import HabitRow from './HabitRow'
 import Toast from './Toast'
@@ -19,13 +20,6 @@ import { reorderHabits } from '@/lib/reorder'
 
 export const CATEGORY_ORDER = ['daily', 'weekly', 'weekend', 'monthly'] as const
 type Freq = typeof CATEGORY_ORDER[number]
-
-export const CATEGORY_LABELS: Record<Freq, string> = {
-  daily: 'Diario',
-  weekly: 'Semanal',
-  weekend: 'Fin de semana',
-  monthly: 'Mensual',
-}
 
 export function groupByFrequency(habits: Habit[]) {
   return CATEGORY_ORDER
@@ -183,7 +177,7 @@ export default function HabitGrid({ habits, year, month, completions, streakComp
                     colSpan={days.length + 2}
                     className="px-4 py-1 text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 dark:bg-cream-700 dark:text-cream-300"
                   >
-                    {CATEGORY_LABELS[group.freq]}
+                    {FREQUENCY_LABELS[group.freq]}
                   </td>
                 </tr>
                 {group.habits.map((habit) => (
