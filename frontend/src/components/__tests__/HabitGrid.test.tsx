@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import api from '@/lib/api'
-import HabitGrid, { groupByFrequency } from '../HabitGrid'
+import HabitGrid, { groupByFrequency, resolveDragReorder } from '../HabitGrid'
 import { type Habit } from '@/hooks/useHabits'
 import { type Completion } from '@/hooks/useCompletions'
 
@@ -181,5 +181,46 @@ describe('groupByFrequency', () => {
 
   it('returns an empty array for an empty habit list', () => {
     expect(groupByFrequency([])).toEqual([])
+  })
+})
+
+describe('resolveDragReorder', () => {
+  it('reorders when active and over share the same frequency', () => {
+    const a = makeHabit({ id: 'd1', frequency: 'daily' })
+    const b = makeHabit({ id: 'd2', frequency: 'daily' })
+    const c = makeHabit({ id: 'd3', frequency: 'daily' })
+
+    const result = resolveDragReorder([a, b, c], 'd3', 'd1')
+
+    expect(result?.map((h) => h.id)).toEqual(['d3', 'd1', 'd2'])
+  })
+
+  it('returns null when active and over have different frequencies', () => {
+    const daily = makeHabit({ id: 'd1', frequency: 'daily' })
+    const weekly = makeHabit({ id: 'w1', frequency: 'weekly' })
+
+    expect(resolveDragReorder([daily, weekly], 'd1', 'w1')).toBeNull()
+  })
+
+  it('returns null when activeId is not found', () => {
+    const daily = makeHabit({ id: 'd1', frequency: 'daily' })
+    expect(resolveDragReorder([daily], 'missing', 'd1')).toBeNull()
+  })
+
+  it('returns null when overId is not found', () => {
+    const daily = makeHabit({ id: 'd1', frequency: 'daily' })
+    expect(resolveDragReorder([daily], 'd1', 'missing')).toBeNull()
+  })
+
+  it('preserves relative order of habits from other categories', () => {
+    const d1 = makeHabit({ id: 'd1', frequency: 'daily' })
+    const w1 = makeHabit({ id: 'w1', frequency: 'weekly' })
+    const d2 = makeHabit({ id: 'd2', frequency: 'daily' })
+    const w2 = makeHabit({ id: 'w2', frequency: 'weekly' })
+    const d3 = makeHabit({ id: 'd3', frequency: 'daily' })
+    // Dragging d1 (first daily) to sit after d3 (last daily) should leave
+    // w1/w2 exactly where they were, with d1 now last among the dailies.
+    const result = resolveDragReorder([d1, w1, d2, w2, d3], 'd1', 'd3')
+    expect(result?.map((h) => h.id)).toEqual(['w1', 'd2', 'w2', 'd3', 'd1'])
   })
 })

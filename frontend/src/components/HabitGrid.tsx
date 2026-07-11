@@ -33,6 +33,15 @@ export function groupByFrequency(habits: Habit[]) {
     .filter((g) => g.habits.length > 0)
 }
 
+export function resolveDragReorder(habits: Habit[], activeId: string, overId: string): Habit[] | null {
+  const activeHabit = habits.find((h) => h.id === activeId)
+  const overHabit = habits.find((h) => h.id === overId)
+  if (!activeHabit || !overHabit || activeHabit.frequency !== overHabit.frequency) return null
+  const fromIndex = habits.findIndex((h) => h.id === activeId)
+  const toIndex = habits.findIndex((h) => h.id === overId)
+  return reorderHabits(habits, fromIndex, toIndex)
+}
+
 interface HabitGridProps {
   habits: Habit[]
   year: number
@@ -92,10 +101,8 @@ export default function HabitGrid({ habits, year, month, completions, streakComp
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
     if (!over || active.id === over.id) return
-    const fromIndex = orderedHabits.findIndex((h) => h.id === active.id)
-    const toIndex = orderedHabits.findIndex((h) => h.id === over.id)
-    if (fromIndex === -1 || toIndex === -1) return
-    const reordered = reorderHabits(orderedHabits, fromIndex, toIndex)
+    const reordered = resolveDragReorder(orderedHabits, String(active.id), String(over.id))
+    if (!reordered) return
     setOrderedHabits(reordered)
     reorderMutation.mutate(reordered, {
       onError: () => setReorderError('No se pudo guardar el nuevo orden'),
