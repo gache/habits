@@ -19,7 +19,6 @@ import { getDaysInMonth, pad, todayStr, dayChunks } from '@/lib/date-utils'
 import { reorderHabits } from '@/lib/reorder'
 
 export const CATEGORY_ORDER = ['daily', 'weekly', 'weekend', 'monthly'] as const
-type Freq = typeof CATEGORY_ORDER[number]
 
 export function groupByFrequency(habits: Habit[]) {
   return CATEGORY_ORDER
