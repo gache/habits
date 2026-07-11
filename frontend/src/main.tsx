@@ -6,6 +6,11 @@ import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persist
 import App from './App'
 import './index.css'
 
+const storedDarkMode = localStorage.getItem('darkMode')
+const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+const isDark = storedDarkMode !== null ? storedDarkMode === 'true' : prefersDark
+document.documentElement.classList.toggle('dark', isDark)
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

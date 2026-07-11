@@ -25,12 +25,13 @@ export default function Tracker() {
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth() + 1)
   const [showAddModal, setShowAddModal] = useState(false)
-  const [darkMode, setDarkMode] = useState(false)
+  const [darkMode, setDarkMode] = useState(() => document.documentElement.classList.contains('dark'))
   const [savedMessage, setSavedMessage] = useState<string | null>(null)
 
   const toggleDark = (on: boolean) => {
     setDarkMode(on)
     document.documentElement.classList.toggle('dark', on)
+    localStorage.setItem('darkMode', String(on))
   }
 
   const monthStr = `${year}-${pad(month)}`
