@@ -95,6 +95,24 @@ body {
   background-color: #bfa882;
   border-radius: 4px;
 }
+
+:root {
+  --chart-grid: #e5dcc8;
+  --chart-tick: #8a7550;
+  --chart-line: #457040;
+  --chart-tooltip-bg: #faf7f2;
+  --chart-tooltip-text: #3d3020;
+  --chart-tooltip-border: #d4c4a8;
+}
+.dark {
+  --chart-grid: #6b5a45;
+  --chart-tick: #d4c4a8;
+  --chart-line: #7ba873;
+  --chart-tooltip-bg: #3d3020;
+  --chart-tooltip-text: #f5f0e8;
+  --chart-tooltip-border: #6b5a45;
+}
+
 .dark .grid-scroll {
   scrollbar-color: #6b5a45 transparent;
 }

@@ -25,11 +25,18 @@ export default function TrendChart({ points }: TrendChartProps) {
       <div className="h-48" aria-hidden="true">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }} accessibilityLayer={false}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5dcc8" />
-            <XAxis dataKey="label" tick={{ fontSize: 12, fill: '#8a7550' }} />
-            <YAxis domain={[0, 100]} tick={{ fontSize: 12, fill: '#8a7550' }} />
-            <Tooltip formatter={(value) => [`${value}%`, 'Completado']} />
-            <Line type="monotone" dataKey="pct" stroke="#457040" strokeWidth={2} dot={{ r: 3 }} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
+            <XAxis dataKey="label" tick={{ fontSize: 12, fill: 'var(--chart-tick)' }} />
+            <YAxis domain={[0, 100]} tick={{ fontSize: 12, fill: 'var(--chart-tick)' }} />
+            <Tooltip
+              formatter={(value) => [`${value}%`, 'Completado']}
+              contentStyle={{
+                backgroundColor: 'var(--chart-tooltip-bg)',
+                color: 'var(--chart-tooltip-text)',
+                border: '1px solid var(--chart-tooltip-border)',
+              }}
+            />
+            <Line type="monotone" dataKey="pct" stroke="var(--chart-line)" strokeWidth={2} dot={{ r: 3 }} />
           </LineChart>
         </ResponsiveContainer>
       </div>
