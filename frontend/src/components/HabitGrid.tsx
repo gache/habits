@@ -181,7 +181,7 @@ export default function HabitGrid({ habits, year, month, completions, streakComp
                 <tr>
                   <td
                     colSpan={days.length + 2}
-                    className="px-4 py-1 text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50"
+                    className="px-4 py-1 text-xs font-semibold uppercase tracking-wide text-gray-500 bg-gray-50 dark:bg-cream-700 dark:text-cream-300"
                   >
                     {CATEGORY_LABELS[group.freq]}
                   </td>
