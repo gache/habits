@@ -110,8 +110,34 @@ export function updateHabit(id: string, updates: HabitUpdate): Habit {
   return habits.find((h) => h.id === id)!
 }
 
-export function deleteHabit(id: string): void {
-  saveHabits(getHabits().filter((h) => h.id !== id))
+/** Soft delete: exclude the habit from one month and drop that month's completions. */
+export function excludeHabitFromMonth(id: string, month: string): void {
+  const habits = getHabits().map((h) => {
+    if (h.id !== id) return h
+    const excluded = h.excluded_months ?? []
+    return excluded.includes(month) ? h : { ...h, excluded_months: [...excluded, month] }
+  })
+  saveHabits(habits)
+
+  const start = `${month}-01`
+  const end = `${month}-32`
+  saveCompletions(
+    getCompletions().filter((c) => !(c.habit_id === id && c.date >= start && c.date <= end)),
+  )
+}
+
+/** Undo excludeHabitFromMonth: un-exclude the month and recreate the given completions. */
+export function restoreHabit(id: string, month: string, dates: string[]): void {
+  const habits = getHabits().map((h) =>
+    h.id === id ? { ...h, excluded_months: (h.excluded_months ?? []).filter((m) => m !== month) } : h,
+  )
+  saveHabits(habits)
+
+  const existing = getCompletions()
+  const toAdd = dates
+    .filter((date) => !existing.some((c) => c.habit_id === id && c.date === date))
+    .map((date): Completion => ({ id: uid(), habit_id: id, date, created_at: new Date().toISOString() }))
+  if (toAdd.length > 0) saveCompletions([...existing, ...toAdd])
 }
 
 // ─── completions ─────────────────────────────────────────────────────────────

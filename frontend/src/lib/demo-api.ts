@@ -56,11 +56,21 @@ export function installDemoAdapter(api: AxiosInstance) {
       }
     }
 
+    // POST /api/habits/:id/restore
+    const restoreMatch = url.match(/^\/api\/habits\/([^/]+)\/restore$/)
+    if (method === 'post' && restoreMatch) {
+      store.restoreHabit(restoreMatch[1], body.month as string, (body.dates as string[]) ?? [])
+      return ok(null, 204)
+    }
+
     // PATCH /api/habits/:id   or   DELETE /api/habits/:id
     const habitMatch = url.match(/^\/api\/habits\/([^/]+)$/)
     if (habitMatch) {
       if (method === 'patch') return ok(store.updateHabit(habitMatch[1], body as HabitUpdate))
-      if (method === 'delete') { store.deleteHabit(habitMatch[1]); return ok(null, 204) }
+      if (method === 'delete') {
+        store.excludeHabitFromMonth(habitMatch[1], config.params?.month ?? '')
+        return ok(null, 204)
+      }
     }
 
     // GET /api/completions
