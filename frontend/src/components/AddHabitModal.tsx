@@ -107,8 +107,8 @@ export default function AddHabitModal({ onClose, editing, onSaved }: AddHabitMod
         </h2>
 
         {!editing && (
-          <div className="mb-4">
-            <label className="block text-sm text-cream-700 mb-1.5">Agregar rápido</label>
+          <fieldset className="mb-4 border-0 p-0 m-0">
+            <legend className="block text-sm text-cream-700 mb-1.5 p-0">Agregar rápido</legend>
             <div className="flex flex-wrap gap-1.5">
               {HABIT_PRESETS.map((preset) => (
                 <button
@@ -122,13 +122,13 @@ export default function AddHabitModal({ onClose, editing, onSaved }: AddHabitMod
                 </button>
               ))}
             </div>
-          </div>
+          </fieldset>
         )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <div className="flex gap-2">
-            <div className="relative">
-              <label className="block text-sm text-cream-700 mb-1">Ícono</label>
+            <fieldset className="relative border-0 p-0 m-0">
+              <legend className="block text-sm text-cream-700 mb-1 p-0">Ícono</legend>
               <button
                 type="button"
                 onClick={() => setShowEmojiPicker((v) => !v)}
@@ -166,7 +166,7 @@ export default function AddHabitModal({ onClose, editing, onSaved }: AddHabitMod
                   ))}
                 </div>
               )}
-            </div>
+            </fieldset>
             <div className="flex-1">
               <label htmlFor="habit-name" className="block text-sm text-cream-700 mb-1">Nombre *</label>
               <input
@@ -206,8 +206,8 @@ export default function AddHabitModal({ onClose, editing, onSaved }: AddHabitMod
             </select>
           </div>
 
-          <div>
-            <label className="block text-sm text-cream-700 mb-1">Color</label>
+          <fieldset className="border-0 p-0 m-0">
+            <legend className="block text-sm text-cream-700 mb-1 p-0">Color</legend>
             <div className="flex flex-wrap gap-2">
               {PRESET_COLORS.map((c) => (
                 <button
@@ -223,7 +223,7 @@ export default function AddHabitModal({ onClose, editing, onSaved }: AddHabitMod
                 />
               ))}
             </div>
-          </div>
+          </fieldset>
 
           <button
             type="submit"

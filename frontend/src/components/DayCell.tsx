@@ -1,25 +1,28 @@
+import { memo } from 'react'
 import { Check } from '@phosphor-icons/react'
+import type { DisabledReason } from '@/lib/habit-row-utils'
 
 interface DayCellProps {
+  habitId: string
+  date: string // "YYYY-MM-DD" — also used as the aria-label
   completed: boolean
   color: string
   isToday: boolean
   disabled?: boolean // future date, weekend on a weekly habit, or period already fulfilled
-  disabledReason?: 'future' | 'period-locked' | 'weekend' | 'weekday'
-  dateLabel: string  // e.g. "2025-06-15" — for aria-label
+  disabledReason?: DisabledReason
   /** Hidden below the `sm` breakpoint — used to show only the current week on narrow screens. */
   hiddenOnMobile?: boolean
-  onClick: () => void
+  onToggle: (habitId: string, date: string, isCompleted: boolean) => void
 }
 
-const DISABLED_TITLE = {
+const DISABLED_TITLE: Record<DisabledReason, string> = {
   future: 'No se puede completar una fecha futura',
   'period-locked': 'Este hábito ya tiene un check en este período',
   weekend: 'Este hábito solo se puede marcar de lunes a viernes',
   weekday: 'Este hábito solo se puede marcar sábado o domingo',
 }
 
-export default function DayCell({ completed, color, isToday, disabled, disabledReason = 'future', dateLabel, hiddenOnMobile, onClick }: DayCellProps) {
+function DayCell({ habitId, date, completed, color, isToday, disabled, disabledReason = 'future', hiddenOnMobile, onToggle }: DayCellProps) {
   return (
     <td className={['p-0 text-center align-middle', hiddenOnMobile ? 'hidden sm:table-cell' : ''].join(' ').trim()}>
       {/* Button is a larger tap target than the visual swatch inside it, so
@@ -29,9 +32,9 @@ export default function DayCell({ completed, color, isToday, disabled, disabledR
           is the practical ceiling there. Mobile only ever shows 5 days at a
           time (see dayChunks), which leaves room for a proper 40px target. */}
       <button
-        onClick={onClick}
+        onClick={() => onToggle(habitId, date, completed)}
         disabled={disabled}
-        aria-label={`${dateLabel}, ${completed ? 'completado' : 'no completado'}${disabled ? `, ${DISABLED_TITLE[disabledReason]}` : ''}`}
+        aria-label={`${date}, ${completed ? 'completado' : 'no completado'}${disabled ? `, ${DISABLED_TITLE[disabledReason]}` : ''}`}
         title={disabled ? DISABLED_TITLE[disabledReason] : completed ? 'Marcar como no hecho' : 'Marcar como hecho'}
         className={[
           'w-10 h-10 sm:w-[30px] sm:h-[30px] mx-auto flex items-center justify-center transition-all',
@@ -71,3 +74,5 @@ export default function DayCell({ completed, color, isToday, disabled, disabledR
     </td>
   )
 }
+
+export default memo(DayCell)

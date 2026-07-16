@@ -1,5 +1,8 @@
+import { useCallback, useState } from 'react'
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
 import api from '@/lib/api'
+
+const TOGGLE_ERROR_MESSAGE = 'No se pudo guardar el cambio. Revisa tu conexión.'
 
 export interface Completion {
   id: string
@@ -32,6 +35,10 @@ export function useCompletionsForMonths(months: string[]) {
 
 export function useToggleCompletion(month: string) {
   const qc = useQueryClient()
+  // A failed toggle (e.g. offline) used to roll back silently — the
+  // checkbox flashed on then reverted with no indication anything went
+  // wrong. This surfaces a message the caller can show in a toast.
+  const [toggleError, setToggleError] = useState<string | null>(null)
 
   const markMutation = useMutation<Completion, Error, { habitId: string; date: string }, { prev: Completion[] }>({
     mutationFn: async ({ habitId, date }) => {
@@ -47,6 +54,7 @@ export function useToggleCompletion(month: string) {
     },
     onError: (_err, _vars, ctx) => {
       qc.setQueryData(['completions', month], ctx?.prev)
+      setToggleError(TOGGLE_ERROR_MESSAGE)
     },
     onSettled: () => qc.invalidateQueries({ queryKey: ['completions', month] }),
   })
@@ -66,17 +74,26 @@ export function useToggleCompletion(month: string) {
     },
     onError: (_err, _vars, ctx) => {
       qc.setQueryData(['completions', month], ctx?.prev)
+      setToggleError(TOGGLE_ERROR_MESSAGE)
     },
     onSettled: () => qc.invalidateQueries({ queryKey: ['completions', month] }),
   })
 
-  const toggle = (habitId: string, date: string, isCompleted: boolean) => {
+  // Stable across renders (mutate identities are stable per React Query) —
+  // passed straight down through HabitGrid/HabitRow/DayCell, where a fresh
+  // function every render would defeat React.memo on every row and cell.
+  const toggle = useCallback((habitId: string, date: string, isCompleted: boolean) => {
     if (isCompleted) {
       unmarkMutation.mutate({ habitId, date })
     } else {
       markMutation.mutate({ habitId, date })
     }
-  }
+    // Depending on the full mutation objects (rather than their stable
+    // .mutate) would recreate `toggle` every render, defeating its purpose.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [markMutation.mutate, unmarkMutation.mutate])
 
-  return { toggle }
+  const dismissToggleError = useCallback(() => setToggleError(null), [])
+
+  return { toggle, toggleError, dismissToggleError }
 }

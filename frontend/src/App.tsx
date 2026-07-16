@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { onAuthStateChanged, type User } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
 import UpdatePrompt from '@/components/UpdatePrompt'
+import ErrorBoundary from '@/components/ErrorBoundary'
 
 const Login = lazy(() => import('@/pages/Login'))
 const Tracker = lazy(() => import('@/pages/Tracker'))
@@ -40,24 +41,26 @@ export default function App() {
   }
 
   return (
-    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <Suspense fallback={<PageLoading />}>
-        <Routes>
-          {user ? (
-            <>
-              <Route path="/" element={<Tracker />} />
-              <Route path="/history" element={<History />} />
-              <Route path="/informe" element={<Report />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </>
-          ) : (
-            <>
-              <Route path="*" element={<Login />} />
-            </>
-          )}
-        </Routes>
-      </Suspense>
-      <UpdatePrompt />
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <Suspense fallback={<PageLoading />}>
+          <Routes>
+            {user ? (
+              <>
+                <Route path="/" element={<Tracker />} />
+                <Route path="/history" element={<History />} />
+                <Route path="/informe" element={<Report />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </>
+            ) : (
+              <>
+                <Route path="*" element={<Login />} />
+              </>
+            )}
+          </Routes>
+        </Suspense>
+        <UpdatePrompt />
+      </BrowserRouter>
+    </ErrorBoundary>
   )
 }

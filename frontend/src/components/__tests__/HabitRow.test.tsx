@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { DndContext } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import api from '@/lib/api'
 import HabitRow from '../HabitRow'
 import { type Habit } from '@/hooks/useHabits'
@@ -186,5 +186,51 @@ describe('HabitRow', () => {
         dates: ['2026-07-02'],
       }),
     )
+  })
+
+  it('does not re-render when a parent re-renders with unrelated state but the same row props (React.memo)', () => {
+    const renderSpy = vi.fn(HabitRow.type)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(HabitRow as any).type = renderSpy
+    const habit = makeHabit()
+    const days = [1, 2, 3, 4, 5]
+    const rowProps = {
+      habit,
+      days,
+      monthStr: '2026-07',
+      today: '2026-07-05',
+      totalDays: 5,
+      completions: [],
+      mobileVisibleDays: new Set(days),
+      onToggle: vi.fn(),
+    }
+
+    const stableOnDragEnd = () => {}
+    const stableItems = [habit.id]
+
+    function Harness() {
+      const [tick, setTick] = useState(0)
+      return (
+        <div>
+          <button onClick={() => setTick((t) => t + 1)}>bump</button>
+          <span data-testid="tick">{tick}</span>
+          <DndContext onDragEnd={stableOnDragEnd}>
+            <table>
+              <SortableContext items={stableItems} strategy={verticalListSortingStrategy}>
+                <tbody>
+                  <HabitRow {...rowProps} />
+                </tbody>
+              </SortableContext>
+            </table>
+          </DndContext>
+        </div>
+      )
+    }
+
+    render(<Harness />, { wrapper: wrapper() })
+    expect(renderSpy).toHaveBeenCalledTimes(1)
+    fireEvent.click(screen.getByText('bump'))
+    expect(screen.getByTestId('tick').textContent).toBe('1')
+    expect(renderSpy).toHaveBeenCalledTimes(1)
   })
 })

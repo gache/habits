@@ -51,7 +51,7 @@ export default function Tracker() {
   const { data: streakCompletions = [] } = useCompletionsForMonths(streakMonths)
   const { data: log } = useMonthlyLog(monthStr)
   const updateLog = useUpdateMonthlyLog(monthStr)
-  const { toggle } = useToggleCompletion(monthStr)
+  const { toggle, toggleError, dismissToggleError } = useToggleCompletion(monthStr)
 
   const globalPct = monthlyGlobalPct(habits, completions, monthStr)
   const pctColor = globalPct === null ? '#a88c58' : getProgressColor(globalPct)
@@ -146,13 +146,13 @@ export default function Tracker() {
         <div className="bg-cream-50 dark:bg-cream-800 border border-cream-200 dark:border-cream-700 rounded-xl px-4 py-3 mb-4 shadow-xs flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
           <MonthNav year={year} month={month} onPrev={prevMonth} onNext={nextMonth} disablePrev={monthStr <= APP_START_MONTH} />
           <div className="flex items-center gap-2 flex-1 sm:max-w-xs">
-            <label className="text-sm font-600 font-sans uppercase tracking-widest text-cream-700 dark:text-cream-400 shrink-0">Meta</label>
+            <label htmlFor="monthly-goal" className="text-sm font-600 font-sans uppercase tracking-widest text-cream-700 dark:text-cream-400 shrink-0">Meta</label>
             <input
+              id="monthly-goal"
               key={`goal-${monthStr}`}
               defaultValue={log?.goal ?? ''}
               onChange={(e) => updateLog.mutate({ goal: e.target.value })}
               placeholder="Define una meta mensual..."
-              aria-label="Meta de este mes"
               className="flex-1 border-b border-cream-200 dark:border-cream-700 bg-transparent text-base text-cream-800 dark:text-cream-100 placeholder-cream-300 dark:placeholder-cream-600 focus:outline-none focus:border-amber-400 transition-colors pb-0.5 font-sans"
             />
           </div>
@@ -237,6 +237,13 @@ export default function Tracker() {
             message={savedMessage}
             durationMs={3000}
             onTimeout={() => setSavedMessage(null)}
+          />
+        )}
+        {toggleError && (
+          <Toast
+            message={toggleError}
+            durationMs={4000}
+            onTimeout={dismissToggleError}
           />
         )}
       </div>

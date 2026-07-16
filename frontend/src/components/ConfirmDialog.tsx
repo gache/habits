@@ -31,17 +31,19 @@ export default function ConfirmDialog({
   }, [onCancel])
 
   return createPortal(
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-cream-800/30 backdrop-blur-sm px-4"
-      role="alertdialog"
-      aria-modal="true"
-      aria-labelledby="confirm-dialog-title"
-      aria-describedby="confirm-dialog-message"
-      onClick={onCancel}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+      <button
+        type="button"
+        className="fixed inset-0 bg-cream-800/30 backdrop-blur-sm cursor-default"
+        aria-label="Cerrar"
+        onClick={onCancel}
+      />
       <div
-        className="dialog-in bg-cream-50 dark:bg-cream-800 rounded-2xl border border-cream-300 dark:border-cream-600 shadow-soft w-full max-w-sm p-6 text-center"
-        onClick={(e) => e.stopPropagation()}
+        className="dialog-in relative bg-cream-50 dark:bg-cream-800 rounded-2xl border border-cream-300 dark:border-cream-600 shadow-soft w-full max-w-sm p-6 text-center"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="confirm-dialog-title"
+        aria-describedby="confirm-dialog-message"
       >
         <div
           className={[

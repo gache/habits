@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { renderHook, waitFor } from '@testing-library/react'
+import { act, renderHook, waitFor } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import api from '@/lib/api'
@@ -139,5 +139,56 @@ describe('useToggleCompletion', () => {
       const cached = queryClient.getQueryData(['completions', '2026-07'])
       expect(cached).toEqual([])
     })
+  })
+
+  it('surfaces a toggleError message when the mark request fails (e.g. offline)', async () => {
+    // Before this, a failed toggle rolled back silently: the checkbox
+    // flashed on then reverted with zero indication anything went wrong —
+    // easy to miss, especially offline where it happens on every tap.
+    vi.mocked(api.post).mockRejectedValue(new Error('network error'))
+
+    const { Wrapper } = wrapper()
+    const { result } = renderHook(() => useToggleCompletion('2026-07'), { wrapper: Wrapper })
+    expect(result.current.toggleError).toBeNull()
+    result.current.toggle('h1', '2026-07-02', false)
+
+    await waitFor(() => {
+      expect(result.current.toggleError).toEqual(expect.any(String))
+    })
+  })
+
+  it('surfaces a toggleError message when the unmark request fails (e.g. offline)', async () => {
+    vi.mocked(api.delete).mockRejectedValue(new Error('network error'))
+
+    const { Wrapper } = wrapper()
+    const { result } = renderHook(() => useToggleCompletion('2026-07'), { wrapper: Wrapper })
+    result.current.toggle('h1', '2026-07-02', true)
+
+    await waitFor(() => {
+      expect(result.current.toggleError).toEqual(expect.any(String))
+    })
+  })
+
+  it('clears toggleError when dismissToggleError is called', async () => {
+    vi.mocked(api.post).mockRejectedValue(new Error('network error'))
+
+    const { Wrapper } = wrapper()
+    const { result } = renderHook(() => useToggleCompletion('2026-07'), { wrapper: Wrapper })
+    result.current.toggle('h1', '2026-07-02', false)
+    await waitFor(() => expect(result.current.toggleError).not.toBeNull())
+
+    act(() => result.current.dismissToggleError())
+    expect(result.current.toggleError).toBeNull()
+  })
+
+  it('returns a referentially stable toggle function across re-renders', () => {
+    // HabitGrid/HabitRow/DayCell pass `toggle` straight down as a prop —
+    // if it were a fresh function every render, it would defeat
+    // React.memo on every row and every day cell on any unrelated re-render.
+    const { Wrapper } = wrapper()
+    const { result, rerender } = renderHook(() => useToggleCompletion('2026-07'), { wrapper: Wrapper })
+    const first = result.current.toggle
+    rerender()
+    expect(result.current.toggle).toBe(first)
   })
 })

@@ -116,12 +116,12 @@ export default function Login() {
 
           <form onSubmit={handleEmail} className="flex flex-col gap-3">
             <div>
-              <label className="block text-sm font-600 uppercase tracking-widest text-cream-700 dark:text-cream-400 mb-1.5 font-sans">Correo</label>
-              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@ejemplo.com" className={inputClass} />
+              <label htmlFor="login-email" className="block text-sm font-600 uppercase tracking-widest text-cream-700 dark:text-cream-400 mb-1.5 font-sans">Correo</label>
+              <input id="login-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@ejemplo.com" className={inputClass} />
             </div>
             <div>
-              <label className="block text-sm font-600 uppercase tracking-widest text-cream-700 dark:text-cream-400 mb-1.5 font-sans">Contraseña</label>
-              <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className={inputClass} />
+              <label htmlFor="login-password" className="block text-sm font-600 uppercase tracking-widest text-cream-700 dark:text-cream-400 mb-1.5 font-sans">Contraseña</label>
+              <input id="login-password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className={inputClass} />
             </div>
             {!isSignUp && (
               <button

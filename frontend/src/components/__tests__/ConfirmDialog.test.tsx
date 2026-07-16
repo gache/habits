@@ -49,7 +49,7 @@ describe('ConfirmDialog', () => {
   it('calls onCancel when clicking the backdrop', () => {
     const onCancel = vi.fn()
     render(<ConfirmDialog title="T" message="M" onConfirm={vi.fn()} onCancel={onCancel} />)
-    fireEvent.click(screen.getByRole('alertdialog'))
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar' }))
     expect(onCancel).toHaveBeenCalledTimes(1)
   })
 

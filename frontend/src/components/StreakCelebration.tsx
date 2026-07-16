@@ -33,19 +33,19 @@ export default function StreakCelebration({ habitName, level, streak, frequency,
   }, [onDismiss])
 
   return createPortal(
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-cream-800/30 backdrop-blur-sm px-4"
-      role="status"
-      aria-live="polite"
-      onClick={onDismiss}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4" role="status" aria-live="polite">
+      <button
+        type="button"
+        className="fixed inset-0 bg-cream-800/30 backdrop-blur-sm cursor-default"
+        aria-label="Cerrar"
+        onClick={onDismiss}
+      />
       <div
         className={[
-          'bg-cream-50 dark:bg-cream-800 rounded-3xl border border-cream-300 dark:border-cream-600 shadow-lg w-full max-w-sm sm:max-w-md p-8 sm:p-10 flex flex-col items-center text-center',
+          'relative bg-cream-50 dark:bg-cream-800 rounded-3xl border border-cream-300 dark:border-cream-600 shadow-lg w-full max-w-sm sm:max-w-md p-8 sm:p-10 flex flex-col items-center text-center',
           'transition-all motion-reduce:transition-none duration-300 ease-out',
           entered ? 'opacity-100 scale-100' : 'opacity-0 scale-75',
         ].join(' ')}
-        onClick={(e) => e.stopPropagation()}
       >
         <div
           className="w-24 h-24 sm:w-28 sm:h-28 rounded-full flex items-center justify-center mb-4"

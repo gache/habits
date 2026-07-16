@@ -141,4 +141,15 @@ describe('Tracker', () => {
 
     expect(await screen.findByText(/Agregar Nuevo Hábito/)).toBeInTheDocument()
   })
+
+  it('shows an error toast instead of silently reverting when a toggle fails (e.g. offline)', async () => {
+    mockApi()
+    vi.mocked(api.post).mockRejectedValue(new Error('network error'))
+    render(<Tracker />, { wrapper: wrapper() })
+    await screen.findByText(/Leer/)
+
+    screen.getByRole('button', { name: /2026-07-15, no completado/ }).click()
+
+    expect(await screen.findByText('No se pudo guardar el cambio. Revisa tu conexión.')).toBeInTheDocument()
+  })
 })

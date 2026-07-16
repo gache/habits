@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { CaretLeft, CaretRight, WarningCircle } from '@phosphor-icons/react'
 import {
   DndContext,
@@ -17,6 +17,13 @@ import HabitRow from './HabitRow'
 import Toast from './Toast'
 import { getDaysInMonth, pad, todayStr, dayChunks } from '@/lib/date-utils'
 import { groupByFrequency, resolveDragReorder } from '@/lib/habit-grid-utils'
+
+// Module-level (not per-render) so useSensor gets a stable options
+// reference every render — an inline object literal here would make
+// `sensors` a new array every render, destabilizing DndContext the same
+// way an inline onDragEnd or SortableContext items array would.
+const POINTER_ACTIVATION_CONSTRAINT = { distance: 4 }
+const KEYBOARD_SENSOR_OPTIONS = { coordinateGetter: sortableKeyboardCoordinates }
 
 interface HabitGridProps {
   habits: Habit[]
@@ -69,12 +76,25 @@ export default function HabitGrid({ habits, year, month, completions, streakComp
   const activeChunk = chunks[mobileWeekIndex] ?? days
   const mobileVisibleDays = useMemo(() => new Set(activeChunk), [activeChunk])
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  // Precomputes each group's id list once per orderedHabits change, rather
+  // than inline in JSX — a fresh array there on every render (even ones
+  // unrelated to habit order) would change SortableContext's `items` prop
+  // and force every HabitRow to re-render via context, regardless of
+  // HabitRow's React.memo.
+  const groups = useMemo(
+    () => groupByFrequency(orderedHabits).map((group) => ({ ...group, ids: group.habits.map((h) => h.id) })),
+    [orderedHabits],
   )
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: POINTER_ACTIVATION_CONSTRAINT }),
+    useSensor(KeyboardSensor, KEYBOARD_SENSOR_OPTIONS),
+  )
+
+  // Stable across renders — DndContext/SortableContext push their props
+  // through React context, so a fresh onDragEnd here would force every
+  // HabitRow to re-render via context regardless of HabitRow's React.memo.
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event
     if (!over || active.id === over.id) return
     const reordered = resolveDragReorder(orderedHabits, String(active.id), String(over.id))
@@ -83,7 +103,8 @@ export default function HabitGrid({ habits, year, month, completions, streakComp
     reorderMutation.mutate(reordered, {
       onError: () => setReorderError('No se pudo guardar el nuevo orden'),
     })
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderedHabits, reorderMutation.mutate])
 
   if (isError) {
     return (
@@ -151,8 +172,8 @@ export default function HabitGrid({ habits, year, month, completions, streakComp
               <th className="px-1.5 text-center font-bold text-cream-700 dark:text-cream-200 w-9 sm:w-12 rounded-sm">TOTAL</th>
             </tr>
           </thead>
-          {groupByFrequency(orderedHabits).map((group) => (
-            <SortableContext key={group.freq} items={group.habits.map((h) => h.id)} strategy={verticalListSortingStrategy}>
+          {groups.map((group) => (
+            <SortableContext key={group.freq} items={group.ids} strategy={verticalListSortingStrategy}>
               <tbody>
                 <tr>
                   <td

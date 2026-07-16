@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { memo, useEffect, useState } from 'react'
 import { PencilSimple, Archive, Trash, DotsSixVertical, DotsThreeVertical, CalendarBlank } from '@phosphor-icons/react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
@@ -10,9 +10,10 @@ import AddHabitModal from './AddHabitModal'
 import ConfirmDialog from './ConfirmDialog'
 import StreakCelebration from './StreakCelebration'
 import Toast from './Toast'
-import { pad, calcPeriodStreak, calcBestPeriodStreak, habitDaysElapsed, habitPeriodsElapsed, countCompletedPeriods, isPeriodLocked, isWeekday, isWeekend } from '@/lib/date-utils'
+import { pad, calcPeriodStreak, calcBestPeriodStreak, habitDaysElapsed, habitPeriodsElapsed, countCompletedPeriods } from '@/lib/date-utils'
 import { getStreakLevel, periodUnitLabel, type StreakLevel } from '@/lib/streak-levels'
 import { FREQUENCY_LABELS, FREQUENCY_BADGE_STYLES } from '@/lib/habit-presets'
+import { computeDayCellState, computeMilestoneUpdate } from '@/lib/habit-row-utils'
 
 const celebratedKey = (habitId: string) => `habit-streak-celebrated:${habitId}`
 const lastStreakKey = (habitId: string) => `habit-streak-last:${habitId}`
@@ -35,7 +36,7 @@ interface HabitRowProps {
   onToggle: (habitId: string, date: string, isCompleted: boolean) => void
 }
 
-export default function HabitRow({ habit, days, monthStr, today, totalDays, completions, streakCompletions, showStreak = true, mobileVisibleDays, onToggle }: HabitRowProps) {
+function HabitRow({ habit, days, monthStr, today, totalDays, completions, streakCompletions, showStreak = true, mobileVisibleDays, onToggle }: HabitRowProps) {
   const [editing, setEditing] = useState(false)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -74,35 +75,26 @@ export default function HabitRow({ habit, days, monthStr, today, totalDays, comp
     // still celebrate (showStreak only controls whether the small racha
     // badge renders, not whether a real milestone gets detected).
 
-    // If the best streak dropped since we last saw it (a backfilled day got
-    // unchecked), forget which tiers were celebrated so rebuilding past them
-    // celebrates again.
     const lastKey = lastStreakKey(habit.id)
     const lastBest = Number(localStorage.getItem(lastKey) ?? 0)
-    if (bestStreak < lastBest) {
-      localStorage.removeItem(celebratedKey(habit.id))
-    }
-    localStorage.setItem(lastKey, String(bestStreak))
-
-    const bestLevel = getStreakLevel(bestStreak, habit.frequency)
-    if (!bestLevel) return
     const key = celebratedKey(habit.id)
     const lastCelebrated = Number(localStorage.getItem(key) ?? 0)
-    // Daily check-ins are frequent enough that the fixed 3/7/14/30 ladder
-    // leaves long silent stretches (nothing between 8 and 13 days, say) —
-    // so daily celebrates every 3rd consecutive day instead. Weekly,
-    // monthly and weekend habits keep the fixed ladder: their periods are
-    // already spaced out enough (a week, a month) that every-3rd-period
-    // would barely differ from the ladder while losing the escalating
-    // milestone messages.
-    const newMilestone = habit.frequency === 'daily'
-      ? bestStreak % 3 === 0 && bestStreak > lastCelebrated
-      : bestLevel.periods > lastCelebrated
-    if (newMilestone) {
-      localStorage.setItem(key, String(habit.frequency === 'daily' ? bestStreak : bestLevel.periods))
+
+    const { forgetPrevious, milestone, newCelebratedValue } = computeMilestoneUpdate({
+      frequency: habit.frequency,
+      bestStreak,
+      lastBest,
+      lastCelebrated,
+    })
+
+    if (forgetPrevious) localStorage.removeItem(key)
+    localStorage.setItem(lastKey, String(bestStreak))
+
+    if (milestone) {
+      localStorage.setItem(key, String(newCelebratedValue))
       // Triggers only when bestStreak crosses a new milestone, not on every render.
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setCelebrating({ level: bestLevel, streak: bestStreak })
+      setCelebrating(milestone)
     }
   }, [habit.id, bestStreak, habit.frequency])
 
@@ -220,7 +212,12 @@ export default function HabitRow({ habit, days, monthStr, today, totalDays, comp
               </button>
               {showMobileMenu && (
                 <>
-                  <div className="fixed inset-0 z-10" onClick={() => setShowMobileMenu(false)} />
+                  <button
+                    type="button"
+                    className="fixed inset-0 z-10 cursor-default"
+                    aria-label="Cerrar menú"
+                    onClick={() => setShowMobileMenu(false)}
+                  />
                   <div className="absolute right-0 top-full mt-1 z-20 bg-cream-50 dark:bg-cream-800 border border-cream-200 dark:border-cream-600 rounded-lg shadow-lg py-1 w-36">
                     <button
                       onClick={() => { setEditing(true); setShowMobileMenu(false) }}
@@ -281,23 +278,19 @@ export default function HabitRow({ habit, days, monthStr, today, totalDays, comp
         {days.map((day) => {
           const dateStr = `${monthStr}-${pad(day)}`
           const completed = completedDates.has(dateStr)
-          const isFutureUncompleted = dateStr > today && !completed
-          const isWeekendOnWeekly = !completed && habit.frequency === 'weekly' && !isWeekday(dateStr)
-          const isWeekdayOnWeekend = !completed && habit.frequency === 'weekend' && !isWeekend(dateStr)
-          const periodLocked = !isFutureUncompleted && !isWeekendOnWeekly && !isWeekdayOnWeekend && isPeriodLocked(habit.frequency, dateStr, completedDates)
-          const isDisabled = isFutureUncompleted || isWeekendOnWeekly || isWeekdayOnWeekend || periodLocked
-          const disabledReason = isFutureUncompleted ? 'future' : isWeekendOnWeekly ? 'weekend' : isWeekdayOnWeekend ? 'weekday' : 'period-locked'
+          const { isDisabled, disabledReason } = computeDayCellState(habit.frequency, dateStr, today, completedDates)
           return (
             <DayCell
               key={day}
+              habitId={habit.id}
+              date={dateStr}
               completed={completed}
               color={habit.color}
               isToday={dateStr === today}
               disabled={isDisabled}
               disabledReason={disabledReason}
-              dateLabel={dateStr}
               hiddenOnMobile={!mobileVisibleDays.has(day)}
-              onClick={() => { if (!isDisabled) onToggle(habit.id, dateStr, completed) }}
+              onToggle={onToggle}
             />
           )
         })}
@@ -347,3 +340,5 @@ export default function HabitRow({ habit, days, monthStr, today, totalDays, comp
     </>
   )
 }
+
+export default memo(HabitRow)
